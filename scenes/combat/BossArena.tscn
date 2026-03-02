@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://cngfsedqp1eab" path="res://scripts/combat/BossArena.gd" id="1_7urrd"]
 [ext_resource type="Script" uid="uid://c6q5rssb0uu7t" path="res://scripts/combat/TurnManager.gd" id="2_duxwo"]
+[ext_resource type="SpriteFrames" uid="uid://7t6st2k5mkoo" path="res://scenes/combat/warden_spriteframes.tres" id="2_tismf"]
+[ext_resource type="SpriteFrames" uid="uid://diakbdiql8od5" path="res://scenes/combat/hero_spriteframes.tres" id="3_tismf"]
 
 [node name="BossArena" type="Node2D" unique_id=1393162351]
 script = ExtResource("1_7urrd")
@@ -28,16 +30,17 @@ layout_mode = 2
 max_value = 300.0
 value = 300.0
 
-[node name="BossSprite" type="ColorRect" parent="BossContainer" unique_id=2128244972]
-custom_minimum_size = Vector2(400, 120)
-layout_mode = 2
-color = Color(0.545, 0.102, 0.102, 1)
+[node name="BossSprite" type="AnimatedSprite2D" parent="BossContainer" unique_id=902934259]
+position = Vector2(197.5, 113.347534)
+scale = Vector2(0.11907513, 0.07828718)
+sprite_frames = ExtResource("2_tismf")
+animation = &"attack"
 
 [node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
-offset_left = 226.0
-offset_top = 260.0
-offset_right = 926.0
-offset_bottom = 320.0
+offset_left = 675.0
+offset_top = 155.0
+offset_right = 965.0
+offset_bottom = 429.0
 
 [node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
 layout_mode = 2
@@ -59,6 +62,12 @@ value = 100.0
 layout_mode = 2
 text = "PLAYER"
 horizontal_alignment = 1
+
+[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=105467521]
+position = Vector2(194.99998, -48)
+scale = Vector2(0.07644574, 0.056557365)
+sprite_frames = ExtResource("3_tismf")
+animation = &"idle"
 
 [node name="ActionMenu" type="HBoxContainer" parent="." unique_id=1440649870]
 offset_left = 301.0
@@ -84,7 +93,7 @@ text = "USE ITEM"
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
 offset_left = 20.0
 offset_top = 330.0
-offset_right = 560.0
+offset_right = 411.0
 offset_bottom = 450.0
 bbcode_enabled = true
 

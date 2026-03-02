@@ -5,8 +5,8 @@ class_name LoadoutData
 extends Resource
 
 # ─── WEAPON ───────────────────────────────────────────────
-var weapon_name: String = ""
-var weapon_damage: int = 0
+var weapon_name: String = "Limbbreaker"
+var weapon_damage: int = 23
 var weapon_durability: int = 100
 var weapon_max_durability: int = 100
 

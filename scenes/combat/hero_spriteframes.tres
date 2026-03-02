@@ -1,0 +1,32 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://diakbdiql8od5"]
+
+[ext_resource type="Texture2D" uid="uid://dyn678l31urwi" path="res://assets/art/hero/hero_attack.png" id="1_ja2wa"]
+[ext_resource type="Texture2D" uid="uid://b5vfcl75ojjgm" path="res://assets/art/hero/hero_hurt.png" id="2_timid"]
+[ext_resource type="Texture2D" uid="uid://dtgsbim1nb7v6" path="res://assets/art/hero/hero_idle.png" id="3_0ij44"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ja2wa")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_timid")
+}],
+"loop": false,
+"name": &"hurt",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_0ij44")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 1.0
+}]

@@ -3,6 +3,7 @@ class_name TurnManager
 extends Node
 
 # ─── SIGNALS ──────────────────────────────────────────────
+signal boss_attack_started
 signal player_turn_started
 signal boss_turn_started
 signal combat_log_updated(message)
@@ -127,6 +128,7 @@ func _boss_act():
 	emit_signal("player_turn_started")
 
 func _boss_strike():
+	emit_signal("boss_attack_started")    # ← add this
 	var mitigated = player_defense * 2 if player_is_defending else player_defense
 	var damage = max(1, boss_damage - mitigated)
 	player_hp -= damage
@@ -137,6 +139,7 @@ func _boss_strike():
 		"%s strikes for %d damage." % [boss_name, damage])
 
 func _boss_heavy():
+	emit_signal("boss_attack_started")    # ← add this
 	var mitigated = int(player_defense * 1.2) if player_is_defending else 0
 	var damage = max(1, int(boss_damage * 1.8) - mitigated)
 	player_hp -= damage
