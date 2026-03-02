@@ -1,67 +1,87 @@
 [gd_scene format=3 uid="uid://ck6qq1rjt11un"]
 
-[node name="BossArena" type="Node2D" unique_id=1342367917]
+[node name="BossArena" type="Node2D" unique_id=1393162351]
 
-[node name="Background" type="ColorRect" parent="." unique_id=1537522864]
-color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+[node name="Background" type="ColorRect" parent="." unique_id=773513790]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.102, 0.102, 0.102, 1)
 
-[node name="BossContainer" type="VBoxContainer" parent="." unique_id=2118456097]
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_right = 61.0
-offset_bottom = 77.0
-grow_horizontal = 2
+[node name="BossContainer" type="VBoxContainer" parent="." unique_id=845270509]
+offset_left = 376.0
+offset_top = 30.0
+offset_right = 776.0
+offset_bottom = 220.0
 
-[node name="BossName" type="Label" parent="BossContainer" unique_id=1973699609]
+[node name="BossName" type="Label" parent="BossContainer" unique_id=1118858721]
 layout_mode = 2
-text = "Boss1"
+text = "THE WARDEN"
+horizontal_alignment = 1
 
-[node name="BossHealthBar" type="ProgressBar" parent="BossContainer" unique_id=1041047527]
+[node name="BossHealthBar" type="ProgressBar" parent="BossContainer" unique_id=448422346]
+custom_minimum_size = Vector2(400, 24)
 layout_mode = 2
+max_value = 300.0
+value = 300.0
 
-[node name="BossSprite" type="ColorRect" parent="BossContainer" unique_id=88390429]
+[node name="BossSprite" type="ColorRect" parent="BossContainer" unique_id=2128244972]
+custom_minimum_size = Vector2(400, 120)
 layout_mode = 2
+color = Color(0.545, 0.102, 0.102, 1)
 
-[node name="TelegraphBox" type="PanelContainer" parent="." unique_id=262503597]
-offset_left = 63.0
-offset_right = 103.0
-offset_bottom = 40.0
+[node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
+offset_left = 226.0
+offset_top = 260.0
+offset_right = 926.0
+offset_bottom = 320.0
 
-[node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=814679640]
+[node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
 layout_mode = 2
+text = "Waiting..."
+vertical_alignment = 1
 
-[node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=376954223]
-offset_left = 151.0
-offset_right = 216.0
-offset_bottom = 54.0
+[node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
+offset_left = 376.0
+offset_top = 460.0
+offset_right = 776.0
+offset_bottom = 540.0
 
-[node name="PlayerHealthBar" type="ProgressBar" parent="PlayerContainer" unique_id=943023626]
+[node name="PlayerHealthBar" type="ProgressBar" parent="PlayerContainer" unique_id=1968662053]
+custom_minimum_size = Vector2(400, 24)
 layout_mode = 2
+value = 100.0
 
-[node name="PlayerName" type="Label" parent="PlayerContainer" unique_id=923343210]
+[node name="PlayerName" type="Label" parent="PlayerContainer" unique_id=389592006]
 layout_mode = 2
-text = "Player1"
+text = "PLAYER"
+horizontal_alignment = 1
 
-[node name="ActionMenu" type="HBoxContainer" parent="." unique_id=276038461]
-offset_left = 176.0
-offset_top = 53.0
-offset_right = 212.0
-offset_bottom = 91.0
+[node name="ActionMenu" type="HBoxContainer" parent="." unique_id=1440649870]
+offset_left = 301.0
+offset_top = 560.0
+offset_right = 851.0
+offset_bottom = 610.0
 
-[node name="AttackButton" type="Button" parent="ActionMenu" unique_id=211199382]
+[node name="AttackButton" type="Button" parent="ActionMenu" unique_id=334043537]
+custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
+text = "ATTACK"
 
-[node name="DefendButton" type="Button" parent="ActionMenu" unique_id=1074069450]
+[node name="DefendButton" type="Button" parent="ActionMenu" unique_id=386664342]
+custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
+text = "DEFEND"
 
-[node name="ItemButton" type="Button" parent="ActionMenu" unique_id=1192919469]
+[node name="ItemButton" type="Button" parent="ActionMenu" unique_id=500231851]
+custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
+text = "USE ITEM"
 
-[node name="CombatLog" type="RichTextLabel" parent="." unique_id=906792325]
-offset_left = 6.0
-offset_top = 63.0
-offset_right = 46.0
-offset_bottom = 103.0
+[node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
+offset_left = 20.0
+offset_top = 330.0
+offset_right = 560.0
+offset_bottom = 450.0
+bbcode_enabled = true
 
-[node name="TurnManager" type="Node" parent="." unique_id=1009428]
+[node name="TurnManager" type="Node" parent="." unique_id=141466349]
