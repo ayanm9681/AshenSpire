@@ -1,4 +1,5 @@
 # BossArena.gd
+class_name SlashEffect
 extends Node2D
 
 # ─── NODE REFERENCES ──────────────────────────────────────
@@ -14,6 +15,9 @@ extends Node2D
 @onready var defend_btn = $ActionMenu/DefendButton
 @onready var item_btn = $ActionMenu/ItemButton
 @onready var turn_manager = $TurnManager
+
+# Slash scene to instantiate
+const SlashScene = preload("res://scenes/combat/SlashEffect.tscn")
 
 # ─── READY ────────────────────────────────────────────────
 func _ready():
@@ -142,12 +146,31 @@ func flash_sprite(sprite: AnimatedSprite2D):
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack():
 	hero_sprite.play("attack")
-	# Return to idle when attack animation finishes
+	
+	# Spawn slash traveling from hero to boss
+	await spawn_slash(hero_sprite, boss_sprite, "right")
+	
+	# Slash arrived — now trigger hit effects on boss
+	hit_pause(0.07)
+	flash_sprite(boss_sprite)
+	play_boss_hurt()
+	
+	# Hero returns to idle
 	await hero_sprite.animation_finished
 	hero_sprite.play("idle")
 
 func play_boss_attack():
 	boss_sprite.play("attack")
+	
+	# Spawn slash traveling from boss to hero
+	await spawn_slash(boss_sprite, hero_sprite, "left")
+	
+	# Slash arrived — now trigger hit effects on hero
+	hit_pause(0.05)
+	flash_sprite(hero_sprite)
+	play_hero_hurt()
+	
+	# Boss returns to idle
 	await boss_sprite.animation_finished
 	boss_sprite.play("idle")
 
@@ -160,6 +183,23 @@ func play_hero_hurt():
 	hero_sprite.play("hurt")
 	await hero_sprite.animation_finished
 	hero_sprite.play("idle")
+	
+# ─── SLASH EFFECT ─────────────────────────────────────────
+func spawn_slash(from_sprite: AnimatedSprite2D,
+				to_sprite: AnimatedSprite2D,
+				direction: String):
+
+	var slash = SlashScene.instantiate()
+	add_child(slash)
+
+	var from_pos = from_sprite.global_position
+	var to_pos = to_sprite.global_position
+
+	# Cast to Node2D and call setup directly
+	slash.setup(from_pos, to_pos, direction)
+
+	await slash.arrived
+	return
 	
 
 	

@@ -32,7 +32,7 @@ value = 300.0
 
 [node name="BossSprite" type="AnimatedSprite2D" parent="BossContainer" unique_id=902934259]
 position = Vector2(197.5, 113.347534)
-scale = Vector2(0.11907513, 0.07828718)
+scale = Vector2(0.31907758, 0.2782866)
 sprite_frames = ExtResource("2_tismf")
 animation = &"attack"
 
@@ -65,7 +65,7 @@ horizontal_alignment = 1
 
 [node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=105467521]
 position = Vector2(194.99998, -48)
-scale = Vector2(0.07644574, 0.056557365)
+scale = Vector2(0.19644573, 0.17655614)
 sprite_frames = ExtResource("3_tismf")
 animation = &"idle"
 

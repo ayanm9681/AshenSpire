@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://imjvtc0ifokh"]
+
+[ext_resource type="Texture2D" uid="uid://cypepcpb8wjlw" path="res://assets/art/effects/slash.png" id="1_48hw2"]
+[ext_resource type="Script" uid="uid://48mru6nfal0a" path="res://scripts/combat/SlashEffect.gd" id="2_f8g1f"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_f8g1f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_48hw2")
+}],
+"loop": false,
+"name": &"slash",
+"speed": 12.0
+}]
+
+[node name="SlashEffect" type="Node2D" unique_id=1372903767]
+script = ExtResource("2_f8g1f")
+
+[node name="SlashSprite" type="AnimatedSprite2D" parent="." unique_id=1628780445]
+position = Vector2(41, -69)
+rotation = -1.5759853
+scale = Vector2(0.25875485, 0.2345679)
+sprite_frames = SubResource("SpriteFrames_f8g1f")
+animation = &"slash"
