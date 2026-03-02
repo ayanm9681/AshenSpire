@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://ck6qq1rjt11un"]
+
+[node name="BossArena" type="Node2D" unique_id=1342367917]
+
+[node name="Background" type="ColorRect" parent="." unique_id=1537522864]
+color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[node name="BossContainer" type="VBoxContainer" parent="." unique_id=2118456097]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_right = 61.0
+offset_bottom = 77.0
+grow_horizontal = 2
+
+[node name="BossName" type="Label" parent="BossContainer" unique_id=1973699609]
+layout_mode = 2
+text = "Boss1"
+
+[node name="BossHealthBar" type="ProgressBar" parent="BossContainer" unique_id=1041047527]
+layout_mode = 2
+
+[node name="BossSprite" type="ColorRect" parent="BossContainer" unique_id=88390429]
+layout_mode = 2
+
+[node name="TelegraphBox" type="PanelContainer" parent="." unique_id=262503597]
+offset_left = 63.0
+offset_right = 103.0
+offset_bottom = 40.0
+
+[node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=814679640]
+layout_mode = 2
+
+[node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=376954223]
+offset_left = 151.0
+offset_right = 216.0
+offset_bottom = 54.0
+
+[node name="PlayerHealthBar" type="ProgressBar" parent="PlayerContainer" unique_id=943023626]
+layout_mode = 2
+
+[node name="PlayerName" type="Label" parent="PlayerContainer" unique_id=923343210]
+layout_mode = 2
+text = "Player1"
+
+[node name="ActionMenu" type="HBoxContainer" parent="." unique_id=276038461]
+offset_left = 176.0
+offset_top = 53.0
+offset_right = 212.0
+offset_bottom = 91.0
+
+[node name="AttackButton" type="Button" parent="ActionMenu" unique_id=211199382]
+layout_mode = 2
+
+[node name="DefendButton" type="Button" parent="ActionMenu" unique_id=1074069450]
+layout_mode = 2
+
+[node name="ItemButton" type="Button" parent="ActionMenu" unique_id=1192919469]
+layout_mode = 2
+
+[node name="CombatLog" type="RichTextLabel" parent="." unique_id=906792325]
+offset_left = 6.0
+offset_top = 63.0
+offset_right = 46.0
+offset_bottom = 103.0
+
+[node name="TurnManager" type="Node" parent="." unique_id=1009428]
