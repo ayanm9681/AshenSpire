@@ -5,8 +5,8 @@ class_name LoadoutData
 extends Resource
 
 # ─── WEAPON ───────────────────────────────────────────────
-var weapon_name: String = "Limbbreaker"
-var weapon_damage: int = 23
+var weapon_name: String = ""
+var weapon_damage: int = 0
 var weapon_durability: int = 100
 var weapon_max_durability: int = 100
 
@@ -59,7 +59,7 @@ func effective_damage() -> int:
 	elif pct > 0.0:
 		return int(weapon_damage * 0.40)
 	else:
-		return max(1, int(weapon_damage * 0.15)) # Broken — barely usable
+		return max(1, int(weapon_damage * 0.15)) # Broken — barely usablee
 
 # One line summary for UI display
 func get_summary() -> String:

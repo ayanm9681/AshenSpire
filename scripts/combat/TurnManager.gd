@@ -2,66 +2,100 @@
 class_name TurnManager
 extends Node
 
-# ─── SIGNALS ──────────────────────────────────────────────
-signal boss_attack_started
-signal player_turn_started
-signal boss_turn_started
-signal combat_log_updated(message)
-signal hp_changed(entity, new_hp)
-signal combat_ended(player_won)
-signal telegraph_updated(boss_move, description)
+# ==============================
+# SIGNALS (BossArena compatible)
+# ==============================
+
+signal hp_changed(entity: String, new_hp: int)
+signal boss_attack_started()
+signal combat_log_updated(message: String)
+signal telegraph_updated(move: String, description: String)
+signal player_turn_started()
+signal boss_turn_started()
+signal combat_ended(player_won: bool)
 signal loadout_swapped(new_loadout)
 
-# ─── ENUMS ────────────────────────────────────────────────
-enum TurnState { PLAYER_TURN, BOSS_TURN, RESOLVING, ENDED }
-enum PlayerAction { ATTACK, DEFEND, USE_ITEM }
+# ==============================
+# ENUMS
+# ==============================
 
-# ─── COMBAT STATE ─────────────────────────────────────────
-var turn_state = TurnState.PLAYER_TURN
-var player_is_defending = false
+enum PlayerAction {
+	ATTACK,
+	DEFEND,
+	USE_ITEM
+}
 
-# ─── PLAYER STATS ─────────────────────────────────────────
-var player_hp = 100
-var player_max_hp = 100
-var player_damage = 22
-var player_defense = 8
+enum TurnState {
+	PLAYER_TURN,
+	BOSS_TURN,
+	ENDED
+}
 
-# ─── BOSS STATS ───────────────────────────────────────────
-var boss_hp = 300
-var boss_max_hp = 300
-var boss_damage = 30
-var boss_defense = 5
-var boss_name = "The Warden"
+var turn_state: TurnState = TurnState.PLAYER_TURN
 
-# ─── TELEGRAPH ────────────────────────────────────────────
-var boss_next_move = ""
-var boss_next_description = ""
+# ==============================
+# PLAYER STATS (from loadout)
+# ==============================
 
-# ─── ECHO THRESHOLD TRACKING ──────────────────────────────
-var threshold_damage_dealt = 0
-var threshold_turns = 0
-var threshold_required_damage = 180
-var threshold_turn_window = 6
-var echo_threshold_met = false
+var player_max_hp: int = 100
+var player_hp: int = 100
+var player_damage: int = 0
+var player_defense: int = 0
+var player_is_defending: bool = false
 
-# ─── READY ────────────────────────────────────────────────
-func _ready():
-	_sync_from_game_manager()
-	_boss_choose_next_move()
+# ==============================
+# BOSS STATS
+# ==============================
+
+var boss_max_hp: int = 300
+var boss_hp: int = 300
+var boss_damage: int = 18
+var boss_defense: int = 5
+
+var boss_next_move: String = ""
+var last_boss_move: String = ""
+
+# ==============================
+# ECHO TRACKING (unchanged)
+# ==============================
+
+var threshold_damage_dealt: int = 0
+var threshold_turns: int = 0
+var threshold_required_damage: int = 60
+var threshold_turn_window: int = 3
+var echo_threshold_met: bool = false
+
+# ==============================
+# READY
+# ==============================
+
+func _ready() -> void:
+	_apply_loadout_stats()
+	randomize()
+	_roll_next_move()
+
+	emit_signal("telegraph_updated", boss_next_move, _describe_move(boss_next_move))
+	emit_signal("hp_changed", "player", player_hp)
+	emit_signal("hp_changed", "boss", boss_hp)
 	emit_signal("player_turn_started")
 
-func _sync_from_game_manager():
-	player_hp = GameManager.player_hp
-	player_max_hp = GameManager.player_max_hp
+# ==============================
+# LOADOUT APPLY
+# ==============================
+
+func _apply_loadout_stats() -> void:
 	player_damage = GameManager.active_loadout.weapon_damage
 	player_defense = GameManager.active_loadout.armor_defense
+	player_hp = player_max_hp
 
-# ─── PLAYER ACTIONS ───────────────────────────────────────
-func player_act(action):
+# ==============================
+# PLAYER ACTION ENTRY
+# ==============================
+
+func player_act(action: PlayerAction) -> void:
 	if turn_state != TurnState.PLAYER_TURN:
 		return
 
-	turn_state = TurnState.RESOLVING
 	player_is_defending = false
 
 	match action:
@@ -72,155 +106,177 @@ func player_act(action):
 		PlayerAction.USE_ITEM:
 			_player_use_item()
 
-func _player_attack():
-	var damage = max(1, player_damage - boss_defense)
-	boss_hp -= damage
-	boss_hp = max(0, boss_hp)
-
-	# Echo threshold tracking
-	threshold_turns += 1
-	if threshold_turns <= threshold_turn_window:
-		threshold_damage_dealt += damage
-		_check_echo_threshold()
-
-	emit_signal("hp_changed", "boss", boss_hp)
-	emit_signal("combat_log_updated",
-		"You strike for %d damage." % damage)
-
-	if boss_hp <= 0:
-		_end_combat(true)
+	_check_end()
+	if turn_state == TurnState.ENDED:
 		return
 
-	_start_boss_turn()
-
-func _player_defend():
-	player_is_defending = true
-	emit_signal("combat_log_updated", "You brace for impact.")
-	_start_boss_turn()
-
-func _player_use_item():
-	emit_signal("combat_log_updated",
-		"You reach for your pack... nothing yet.")
-	_start_boss_turn()
-
-# ─── BOSS ACTIONS ─────────────────────────────────────────
-func _start_boss_turn():
 	turn_state = TurnState.BOSS_TURN
 	emit_signal("boss_turn_started")
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(1.5).timeout  # <-- delay before boss attack
+	emit_signal("boss_attack_started")
 	_boss_act()
 
-func _boss_act():
+# ==============================
+# PLAYER ACTIONS
+# ==============================
+
+func _player_attack() -> void:
+	var base: int = player_damage - boss_defense
+	var damage: int = base if base > 0 else 1
+
+	damage += 2  # small balance adjustment
+
+	boss_hp -= damage
+	threshold_damage_dealt += damage
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "You dealt %d damage." % damage)
+	emit_signal("hp_changed", "boss", boss_hp)
+
+	_check_echo_threshold()
+
+func _player_defend() -> void:
+	player_is_defending = true
+	threshold_turns += 1
+	emit_signal("combat_log_updated", "You brace for impact.")
+
+func _player_use_item() -> void:
+	var heal: int = 25
+	player_hp = min(player_max_hp, player_hp + heal)
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "You healed %d HP." % heal)
+	emit_signal("hp_changed", "player", player_hp)
+
+# ==============================
+# BOSS TURN
+# ==============================
+
+func _boss_act() -> void:
+	var raw_damage: int = boss_damage
+
 	match boss_next_move:
 		"STRIKE":
-			_boss_strike()
-		"HEAVY":
-			_boss_heavy()
-		"ENDURE":
-			_boss_endure()
+			raw_damage = boss_damage
+			emit_signal("combat_log_updated", "Warden uses STRIKE!")
 
-	if player_hp <= 0:
-		_handle_player_death()
+		"HEAVY":
+			raw_damage = int(boss_damage * 1.8)
+			emit_signal("combat_log_updated", "Warden unleashes HEAVY attack!")
+
+		"ENDURE":
+			var heal: int = 20
+			boss_hp = min(boss_max_hp, boss_hp + heal)
+			emit_signal("combat_log_updated", "Warden ENDURES and heals %d HP!" % heal)
+			emit_signal("hp_changed", "boss", boss_hp)
+
+			_end_boss_turn()
+			return
+
+	var final_damage: int = raw_damage
+
+	if player_is_defending:
+		if boss_next_move == "HEAVY":
+			final_damage = int(raw_damage * 0.35)  # 65% reduction
+		else:
+			final_damage = int(raw_damage * 0.5)   # 50% reduction
+
+	player_hp -= final_damage
+
+	emit_signal("combat_log_updated", "You took %d damage." % final_damage)
+	emit_signal("hp_changed", "player", player_hp)
+
+	_end_boss_turn()
+
+# ==============================
+# END BOSS TURN
+# ==============================
+
+func _end_boss_turn() -> void:
+	_check_end()
+	if turn_state == TurnState.ENDED:
 		return
 
-	_boss_choose_next_move()
+	_roll_next_move()
+	emit_signal("telegraph_updated", boss_next_move, _describe_move(boss_next_move))
+
+	await get_tree().create_timer(1.0).timeout  # small recovery delay
 	turn_state = TurnState.PLAYER_TURN
 	emit_signal("player_turn_started")
 
-func _boss_strike():
-	emit_signal("boss_attack_started")    # ← add this
-	var mitigated = player_defense * 2 if player_is_defending else player_defense
-	var damage = max(1, boss_damage - mitigated)
-	player_hp -= damage
-	player_hp = max(0, player_hp)
-	GameManager.player_hp = player_hp
-	emit_signal("hp_changed", "player", player_hp)
-	emit_signal("combat_log_updated",
-		"%s strikes for %d damage." % [boss_name, damage])
+# ==============================
+# BOSS AI (no heavy spam)
+# ==============================
 
-func _boss_heavy():
-	emit_signal("boss_attack_started")    # ← add this
-	var mitigated = int(player_defense * 1.2) if player_is_defending else 0
-	var damage = max(1, int(boss_damage * 1.8) - mitigated)
-	player_hp -= damage
-	player_hp = max(0, player_hp)
-	GameManager.player_hp = player_hp
-	emit_signal("hp_changed", "player", player_hp)
-	emit_signal("combat_log_updated",
-		"%s lands a crushing blow for %d damage!" % [boss_name, damage])
+func _roll_next_move() -> void:
+	var roll: int = randi() % 100
 
-func _boss_endure():
-	var heal = 15
-	boss_hp = min(boss_max_hp, boss_hp + heal)
-	emit_signal("hp_changed", "boss", boss_hp)
-	emit_signal("combat_log_updated",
-		"%s endures. Recovers %d HP." % [boss_name, heal])
-
-# ─── TELEGRAPH ────────────────────────────────────────────
-func _boss_choose_next_move():
-	var roll = randi() % 100
-
-	if roll < 55:
-		boss_next_move = "STRIKE"
-		boss_next_description = "A measured strike. Blockable."
-	elif roll < 80:
-		boss_next_move = "HEAVY"
-		boss_next_description = "A slow, devastating blow. Block helps less."
+	if last_boss_move == "HEAVY":
+		boss_next_move = "STRIKE" if roll < 70 else "ENDURE"
 	else:
-		boss_next_move = "ENDURE"
-		boss_next_description = "It steadies itself. Preparing."
+		if roll < 50:
+			boss_next_move = "STRIKE"
+		elif roll < 80:
+			boss_next_move = "HEAVY"
+		else:
+			boss_next_move = "ENDURE"
 
-	emit_signal("telegraph_updated", boss_next_move, boss_next_description)
+	last_boss_move = boss_next_move
 
-# ─── ECHO THRESHOLD ───────────────────────────────────────
-func _check_echo_threshold():
-	if echo_threshold_met:
-		return
+# ==============================
+# TELEGRAPH DESCRIPTION
+# ==============================
+
+func _describe_move(move: String) -> String:
+	match move:
+		"STRIKE":
+			return "Quick slash"
+		"HEAVY":
+			return "Massive overhead strike"
+		"ENDURE":
+			return "Recovering vitality"
+	return ""
+
+# ==============================
+# ECHO CHECK (unchanged logic)
+# ==============================
+
+func _check_echo_threshold() -> void:
+	if threshold_turns > threshold_turn_window:
+		threshold_damage_dealt = 0
+		threshold_turns = 0
+
 	if threshold_damage_dealt >= threshold_required_damage:
 		echo_threshold_met = true
-		GameManager.echo_threshold_met = true
-		GameManager.echo_snapshot = {
-			"weapon": GameManager.active_loadout.weapon_name,
-			"damage": player_damage,
-			"hp_at_threshold": player_hp
-		}
-		# Silent — environment layer will react later
-		emit_signal("combat_log_updated", "...")
 
-# ─── DEATH ────────────────────────────────────────────────
-func _handle_player_death():
-	turn_state = TurnState.ENDED
-	var run_continues = GameManager.on_player_death()
+# ==============================
+# END CHECK
+# ==============================
+
+func _check_end() -> void:
+	if player_hp <= 0:
+		_handle_player_death()
+
+	elif boss_hp <= 0:
+		turn_state = TurnState.ENDED
+		emit_signal("combat_log_updated", "The Warden falls.")
+		emit_signal("combat_ended", true)
+
+# ==============================
+# LOADOUT CONTINUE SYSTEM
+# ==============================
+
+func _handle_player_death() -> void:
+	var run_continues: bool = GameManager.on_player_death()
 
 	if run_continues:
+		_apply_loadout_stats()
 		emit_signal("loadout_swapped", GameManager.active_loadout)
-		emit_signal("combat_log_updated",
-			"You fall. The Spire is not done with you.")
-		_reset_for_retry()
+		emit_signal("hp_changed", "player", player_hp)
+		emit_signal("combat_log_updated", "You rise again with a new loadout!")
+		turn_state = TurnState.PLAYER_TURN
+		emit_signal("player_turn_started")
 	else:
-		emit_signal("combat_log_updated",
-			"You have nothing left. The Spire consumes you.")
+		turn_state = TurnState.ENDED
+		emit_signal("combat_log_updated", "You were defeated.")
 		emit_signal("combat_ended", false)
-
-func _reset_for_retry():
-	boss_hp = boss_max_hp
-	player_hp = GameManager.player_hp
-	player_damage = GameManager.active_loadout.weapon_damage
-	player_defense = GameManager.active_loadout.armor_defense
-	player_is_defending = false
-	threshold_damage_dealt = 0
-	threshold_turns = 0
-	echo_threshold_met = false
-
-	emit_signal("hp_changed", "boss", boss_hp)
-	emit_signal("hp_changed", "player", player_hp)
-	_boss_choose_next_move()
-	turn_state = TurnState.PLAYER_TURN
-	emit_signal("player_turn_started")
-
-func _end_combat(player_won):
-	turn_state = TurnState.ENDED
-	if player_won:
-		emit_signal("combat_log_updated",
-			"The %s falls. Silence." % boss_name)
-	emit_signal("combat_ended", player_won)
