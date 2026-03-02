@@ -1,6 +1,10 @@
 [gd_scene format=3 uid="uid://ck6qq1rjt11un"]
 
+[ext_resource type="Script" uid="uid://cngfsedqp1eab" path="res://scripts/combat/BossArena.gd" id="1_7urrd"]
+[ext_resource type="Script" uid="uid://c6q5rssb0uu7t" path="res://scripts/combat/TurnManager.gd" id="2_duxwo"]
+
 [node name="BossArena" type="Node2D" unique_id=1393162351]
+script = ExtResource("1_7urrd")
 
 [node name="Background" type="ColorRect" parent="." unique_id=773513790]
 offset_right = 1152.0
@@ -85,3 +89,4 @@ offset_bottom = 450.0
 bbcode_enabled = true
 
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
+script = ExtResource("2_duxwo")
