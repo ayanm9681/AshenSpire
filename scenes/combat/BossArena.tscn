@@ -2,16 +2,17 @@
 
 [ext_resource type="Script" uid="uid://cngfsedqp1eab" path="res://scripts/combat/BossArena.gd" id="1_7urrd"]
 [ext_resource type="Script" uid="uid://c6q5rssb0uu7t" path="res://scripts/combat/TurnManager.gd" id="2_duxwo"]
+[ext_resource type="Texture2D" uid="uid://do4qtec1hg1y0" path="res://assets/art/backgrounds/background_1.png" id="2_liv8q"]
 [ext_resource type="SpriteFrames" uid="uid://7t6st2k5mkoo" path="res://scenes/combat/warden_spriteframes.tres" id="2_tismf"]
 [ext_resource type="SpriteFrames" uid="uid://diakbdiql8od5" path="res://scenes/combat/hero_spriteframes.tres" id="3_tismf"]
 
 [node name="BossArena" type="Node2D" unique_id=1393162351]
 script = ExtResource("1_7urrd")
 
-[node name="Background" type="ColorRect" parent="." unique_id=773513790]
-offset_right = 1152.0
-offset_bottom = 648.0
-color = Color(0.102, 0.102, 0.102, 1)
+[node name="Background" type="Sprite2D" parent="." unique_id=858772487]
+position = Vector2(572, 321)
+scale = Vector2(0.7526041, 0.24273254)
+texture = ExtResource("2_liv8q")
 
 [node name="BossContainer" type="VBoxContainer" parent="." unique_id=845270509]
 offset_left = 376.0
@@ -36,17 +37,6 @@ scale = Vector2(0.31907758, 0.2782866)
 sprite_frames = ExtResource("2_tismf")
 animation = &"attack"
 
-[node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
-offset_left = 675.0
-offset_top = 155.0
-offset_right = 965.0
-offset_bottom = 429.0
-
-[node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
-layout_mode = 2
-text = "Waiting..."
-vertical_alignment = 1
-
 [node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
 offset_left = 376.0
 offset_top = 460.0
@@ -69,6 +59,24 @@ scale = Vector2(0.19644573, 0.17655614)
 sprite_frames = ExtResource("3_tismf")
 animation = &"idle"
 
+[node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
+offset_left = 20.0
+offset_top = 330.0
+offset_right = 411.0
+offset_bottom = 450.0
+bbcode_enabled = true
+
+[node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
+offset_left = 675.0
+offset_top = 155.0
+offset_right = 965.0
+offset_bottom = 429.0
+
+[node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
+layout_mode = 2
+text = "Waiting..."
+vertical_alignment = 1
+
 [node name="ActionMenu" type="HBoxContainer" parent="." unique_id=1440649870]
 offset_left = 301.0
 offset_top = 560.0
@@ -89,13 +97,6 @@ text = "DEFEND"
 custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
 text = "USE ITEM"
-
-[node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
-offset_left = 20.0
-offset_top = 330.0
-offset_right = 411.0
-offset_bottom = 450.0
-bbcode_enabled = true
 
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
 script = ExtResource("2_duxwo")
