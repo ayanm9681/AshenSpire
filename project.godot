@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="AshenSpire"
+run/main_scene="uid://ck6qq1rjt11un"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameManager="*uid://b63ht75lwk66x"
 
 [physics]
 

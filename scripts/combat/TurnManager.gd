@@ -1,4 +1,5 @@
 # TurnManager.gd
+class_name TurnManager
 extends Node
 
 # ─── SIGNALS ──────────────────────────────────────────────
