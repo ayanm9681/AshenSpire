@@ -10,15 +10,16 @@
 script = ExtResource("1_7urrd")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=858772487]
-position = Vector2(360, 640)
+position = Vector2(360.00003, 772)
 scale = Vector2(0.9, 0.9)
 texture = ExtResource("2_liv8q")
 
 [node name="BossContainer" type="VBoxContainer" parent="." unique_id=845270509]
-offset_left = 80.0
-offset_top = 40.0
-offset_right = 640.0
-offset_bottom = 420.0
+offset_left = 30.0
+offset_top = -75.99999
+offset_right = 590.0
+offset_bottom = 304.0
+scale = Vector2(1.1780245, 1.2909441)
 alignment = 1
 
 [node name="BossName" type="Label" parent="BossContainer" unique_id=1118858721]
@@ -62,17 +63,18 @@ sprite_frames = ExtResource("3_tismf")
 animation = &"idle"
 
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
-offset_left = 80.0
-offset_top = 520.0
-offset_right = 640.0
-offset_bottom = 700.0
+offset_left = 91.0
+offset_top = 430.0
+offset_right = 651.0
+offset_bottom = 610.0
 bbcode_enabled = true
 
 [node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
-offset_left = 80.0
-offset_top = 430.0
-offset_right = 640.0
-offset_bottom = 510.0
+offset_left = 333.0
+offset_top = 623.0
+offset_right = 893.0
+offset_bottom = 703.0
+scale = Vector2(0.6647501, 0.8052853)
 
 [node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
 layout_mode = 2
@@ -92,7 +94,7 @@ custom_minimum_size = Vector2(300, 70)
 layout_mode = 2
 text = "ATTACK"
 
-[node name="HeavyAttackButton" type="Button" parent="ActionMenu"]
+[node name="HeavyAttackButton" type="Button" parent="ActionMenu" unique_id=1782702121]
 custom_minimum_size = Vector2(300, 70)
 layout_mode = 2
 text = "HEAVY"
