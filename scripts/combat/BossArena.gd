@@ -161,10 +161,10 @@ func play_hero_attack():
 	hit_pause(0.07)
 	flash_sprite(boss_sprite)
 	play_boss_hurt()
-	
-	# Hero returns to idle
-	await hero_sprite.animation_finished
-	hero_sprite.play("idle")
+
+	# Force a clean return so one-frame attacks never get stuck.
+	if hero_sprite.animation == "attack":
+		hero_sprite.play("idle")
 
 func play_hero_heavy_attack():
 	hero_sprite.play("attack")
@@ -172,8 +172,8 @@ func play_hero_heavy_attack():
 	hit_pause(0.1)
 	flash_sprite(boss_sprite)
 	play_boss_hurt()
-	await hero_sprite.animation_finished
-	hero_sprite.play("idle")
+	if hero_sprite.animation == "attack":
+		hero_sprite.play("idle")
 
 func play_boss_attack():
 	boss_sprite.play("attack")
@@ -185,10 +185,10 @@ func play_boss_attack():
 	hit_pause(0.05)
 	flash_sprite(hero_sprite)
 	play_hero_hurt()
-	
-	# Boss returns to idle
-	await boss_sprite.animation_finished
-	boss_sprite.play("idle")
+
+	# Force a clean return so one-frame attacks never get stuck.
+	if boss_sprite.animation == "attack":
+		boss_sprite.play("idle")
 
 func play_boss_hurt():
 	boss_sprite.play("hurt")
