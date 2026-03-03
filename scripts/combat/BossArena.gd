@@ -12,6 +12,7 @@ extends Node2D
 @onready var telegraph_label = $TelegraphBox/TelegraphLabel
 @onready var combat_log = $CombatLog
 @onready var attack_btn = $ActionMenu/AttackButton
+@onready var heavy_attack_btn = $ActionMenu/HeavyAttackButton
 @onready var defend_btn = $ActionMenu/DefendButton
 @onready var item_btn = $ActionMenu/ItemButton
 @onready var turn_manager = $TurnManager
@@ -42,6 +43,7 @@ func _connect_signals():
 
 func _connect_buttons():
 	attack_btn.pressed.connect(_on_attack_pressed)
+	heavy_attack_btn.pressed.connect(_on_heavy_attack_pressed)
 	defend_btn.pressed.connect(_on_defend_pressed)
 	item_btn.pressed.connect(_on_item_pressed)
 
@@ -104,6 +106,10 @@ func _on_attack_pressed():
 	play_hero_attack()                              # ← hero attacks
 	turn_manager.player_act(TurnManager.PlayerAction.ATTACK)
 
+func _on_heavy_attack_pressed():
+	play_hero_heavy_attack()
+	turn_manager.player_act(TurnManager.PlayerAction.HEAVY_ATTACK)
+
 func _on_defend_pressed():
 	turn_manager.player_act(TurnManager.PlayerAction.DEFEND)
 
@@ -113,6 +119,7 @@ func _on_item_pressed():
 # ─── HELPERS ──────────────────────────────────────────────
 func _set_buttons_active(active):
 	attack_btn.disabled = not active
+	heavy_attack_btn.disabled = not active
 	defend_btn.disabled = not active
 	item_btn.disabled = not active
 
@@ -156,6 +163,15 @@ func play_hero_attack():
 	play_boss_hurt()
 	
 	# Hero returns to idle
+	await hero_sprite.animation_finished
+	hero_sprite.play("idle")
+
+func play_hero_heavy_attack():
+	hero_sprite.play("attack")
+	await spawn_slash(hero_sprite, boss_sprite, "right")
+	hit_pause(0.1)
+	flash_sprite(boss_sprite)
+	play_boss_hurt()
 	await hero_sprite.animation_finished
 	hero_sprite.play("idle")
 

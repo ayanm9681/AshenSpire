@@ -21,6 +21,7 @@ signal loadout_swapped(new_loadout)
 
 enum PlayerAction {
 	ATTACK,
+	HEAVY_ATTACK,
 	DEFEND,
 	USE_ITEM
 }
@@ -101,6 +102,8 @@ func player_act(action: PlayerAction) -> void:
 	match action:
 		PlayerAction.ATTACK:
 			_player_attack()
+		PlayerAction.HEAVY_ATTACK:
+			_player_heavy_attack()
 		PlayerAction.DEFEND:
 			_player_defend()
 		PlayerAction.USE_ITEM:
@@ -131,6 +134,19 @@ func _player_attack() -> void:
 	threshold_turns += 1
 
 	emit_signal("combat_log_updated", "You dealt %d damage." % damage)
+	emit_signal("hp_changed", "boss", boss_hp)
+
+	_check_echo_threshold()
+
+func _player_heavy_attack() -> void:
+	var base: int = player_damage - boss_defense
+	var damage: int = int(max(base, 1) * 1.8)
+
+	boss_hp -= damage
+	threshold_damage_dealt += damage
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage." % damage)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
