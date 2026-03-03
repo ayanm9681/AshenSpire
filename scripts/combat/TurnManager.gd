@@ -62,8 +62,8 @@ var last_boss_move: String = ""
 
 var threshold_damage_dealt: int = 0
 var threshold_turns: int = 0
-var threshold_required_damage: int = 60
-var threshold_turn_window: int = 3
+var threshold_required_damage: int = 140
+var threshold_turn_window: int = 6
 var echo_threshold_met: bool = false
 
 # ==============================
@@ -88,7 +88,7 @@ func _apply_loadout_stats() -> void:
 	player_damage = GameManager.active_loadout.weapon_damage
 	player_defense = GameManager.active_loadout.armor_defense
 	player_hp = player_max_hp
-
+	GameManager.player_hp = player_hp 
 # ==============================
 # PLAYER ACTION ENTRY
 # ==============================
@@ -130,6 +130,7 @@ func _player_attack() -> void:
 	damage += 2  # small balance adjustment
 
 	boss_hp -= damage
+	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
 
@@ -139,10 +140,12 @@ func _player_attack() -> void:
 	_check_echo_threshold()
 
 func _player_heavy_attack() -> void:
+	GameManager.active_loadout.degrade_weapon(5) 
 	var base: int = player_damage - boss_defense
 	var damage: int = int(max(base, 1) * 1.8)
 
 	boss_hp -= damage
+	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
 
@@ -198,10 +201,14 @@ func _boss_act() -> void:
 			final_damage = int(raw_damage * 0.5)   # 50% reduction
 
 	player_hp -= final_damage
-
+	player_hp = max(0, player_hp)
+	GameManager.player_hp = player_hp
 	emit_signal("combat_log_updated", "You took %d damage." % final_damage)
 	emit_signal("hp_changed", "player", player_hp)
-
+	
+	if player_hp <= 0:
+		_handle_player_death()
+		return 
 	_end_boss_turn()
 
 # ==============================
@@ -248,9 +255,9 @@ func _describe_move(move: String) -> String:
 		"STRIKE":
 			return "Quick slash"
 		"HEAVY":
-			return "Massive overhead strike"
+			return "Massive overhead strike.Defend!!"
 		"ENDURE":
-			return "Recovering vitality"
+			return "Recovering vitality."
 	return ""
 
 # ==============================
@@ -283,6 +290,7 @@ func _check_end() -> void:
 # ==============================
 
 func _handle_player_death() -> void:
+	turn_state = TurnState.ENDED 
 	var run_continues: bool = GameManager.on_player_death()
 
 	if run_continues:
@@ -290,6 +298,7 @@ func _handle_player_death() -> void:
 		emit_signal("loadout_swapped", GameManager.active_loadout)
 		emit_signal("hp_changed", "player", player_hp)
 		emit_signal("combat_log_updated", "You rise again with a new loadout!")
+		await get_tree().create_timer(1.0).timeout
 		turn_state = TurnState.PLAYER_TURN
 		emit_signal("player_turn_started")
 	else:

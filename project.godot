@@ -24,7 +24,6 @@ GameManager="*uid://b63ht75lwk66x"
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [physics]
 
