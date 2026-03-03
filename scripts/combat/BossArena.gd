@@ -162,9 +162,8 @@ func play_hero_attack():
 	flash_sprite(boss_sprite)
 	play_boss_hurt()
 
-	# Force a clean return so one-frame attacks never get stuck.
-	if hero_sprite.animation == "attack":
-		hero_sprite.play("idle")
+	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	hero_sprite.play("idle")
 
 func play_hero_heavy_attack():
 	hero_sprite.play("attack")
@@ -172,8 +171,8 @@ func play_hero_heavy_attack():
 	hit_pause(0.1)
 	flash_sprite(boss_sprite)
 	play_boss_hurt()
-	if hero_sprite.animation == "attack":
-		hero_sprite.play("idle")
+	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	hero_sprite.play("idle")
 
 func play_boss_attack():
 	boss_sprite.play("attack")
@@ -187,17 +186,17 @@ func play_boss_attack():
 	play_hero_hurt()
 
 	# Force a clean return so one-frame attacks never get stuck.
-	if boss_sprite.animation == "attack":
-		boss_sprite.play("idle")
+	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	boss_sprite.play("idle")
 
 func play_boss_hurt():
 	boss_sprite.play("hurt")
-	await boss_sprite.animation_finished
+	await get_tree().create_timer(0.3).timeout  # hold hurt pose 0.3s
 	boss_sprite.play("idle")
 
 func play_hero_hurt():
 	hero_sprite.play("hurt")
-	await hero_sprite.animation_finished
+	await get_tree().create_timer(0.3).timeout  # hold hurt pose 0.3s
 	hero_sprite.play("idle")
 	
 # ─── SLASH EFFECT ─────────────────────────────────────────
