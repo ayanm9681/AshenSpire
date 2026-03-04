@@ -5,6 +5,117 @@
 [ext_resource type="Texture2D" uid="uid://do4qtec1hg1y0" path="res://assets/art/backgrounds/background_1.png" id="2_liv8q"]
 [ext_resource type="SpriteFrames" uid="uid://7t6st2k5mkoo" path="res://scenes/combat/warden_spriteframes.tres" id="2_tismf"]
 [ext_resource type="SpriteFrames" uid="uid://diakbdiql8od5" path="res://scenes/combat/hero_spriteframes.tres" id="3_tismf"]
+[ext_resource type="Texture2D" uid="uid://cjbvvwrlohvwo" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack1.png" id="5_cp6rl"]
+[ext_resource type="Texture2D" uid="uid://rtij31pyohh5" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack21.png" id="5_swb1c"]
+[ext_resource type="Texture2D" uid="uid://dmfdrwb18xxxc" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack2.png" id="6_37tl2"]
+[ext_resource type="Texture2D" uid="uid://bjek5lrfu6o67" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack22.png" id="6_l34o1"]
+[ext_resource type="Texture2D" uid="uid://de8cc14njfvtb" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack23.png" id="7_4x6wu"]
+[ext_resource type="Texture2D" uid="uid://vwmft0cfhmnd" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack3.png" id="7_j4qck"]
+[ext_resource type="Texture2D" uid="uid://ycrpevuocex5" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack4.png" id="8_drt12"]
+[ext_resource type="Texture2D" uid="uid://b6tqmiemotcip" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack24.png" id="8_frvgk"]
+[ext_resource type="Texture2D" uid="uid://qpdnskyvrigf" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack5.png" id="9_cqxtv"]
+[ext_resource type="Texture2D" uid="uid://btahcg6x3nrin" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack25.png" id="9_oldsl"]
+[ext_resource type="Texture2D" uid="uid://b2rthenid0wyi" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack26.png" id="10_io3eh"]
+[ext_resource type="Texture2D" uid="uid://hi67ahddep4e" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack6.png" id="10_l1dlg"]
+[ext_resource type="Texture2D" uid="uid://dfibinx3lwryr" path="res://assets/art/MainHeroAll/AttackBasic2/BasicAttack27.png" id="11_06ceh"]
+[ext_resource type="Texture2D" uid="uid://bstjvsqh6m61f" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack7.png" id="11_swb1c"]
+[ext_resource type="Texture2D" uid="uid://dod3ac57m8n8w" path="res://assets/art/MainHeroAll/HeavyAttack/HeavyAttack8.png" id="12_l34o1"]
+[ext_resource type="Texture2D" uid="uid://d0q1j1pnq31bw" path="res://assets/art/MainHeroAll/HeroHurt/herohurt1.png" id="13_06ceh"]
+[ext_resource type="Texture2D" uid="uid://cb6neo8oi5bo2" path="res://assets/art/MainHeroAll/HeroIdle/heroidle2.png" id="14_io3eh"]
+[ext_resource type="Texture2D" uid="uid://c3j0mugl30o40" path="res://assets/art/MainHeroAll/HeroHurt/herohurt2.png" id="14_y6s4g"]
+[ext_resource type="Texture2D" uid="uid://byy8h2jrrh3ki" path="res://assets/art/MainHeroAll/HeroIdle/heroidle3.png" id="15_06ceh"]
+[ext_resource type="Texture2D" uid="uid://dxxrhtvy4ylw7" path="res://assets/art/MainHeroAll/HeroHurt/herohurt3.png" id="15_g2w2m"]
+[ext_resource type="Texture2D" uid="uid://dsluctcslauuo" path="res://assets/art/MainHeroAll/HeroIdle/heroidle5.png" id="17_g2w2m"]
+[ext_resource type="Texture2D" uid="uid://bxtt5uggp514x" path="res://assets/art/MainHeroAll/HeroIdle/heroidle6.png" id="18_vvlg1"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4x6wu"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_swb1c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_l34o1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_4x6wu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_frvgk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_oldsl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_io3eh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_06ceh")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_cp6rl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_37tl2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_j4qck")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_drt12")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_cqxtv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_l1dlg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_swb1c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_l34o1")
+}],
+"loop": true,
+"name": &"heavyattack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_06ceh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_y6s4g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_g2w2m")
+}],
+"loop": false,
+"name": &"hurt",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_io3eh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_06ceh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_g2w2m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_vvlg1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 4.0
+}]
 
 [node name="BossArena" type="Node2D" unique_id=1393162351]
 script = ExtResource("1_7urrd")
@@ -34,7 +145,7 @@ max_value = 300.0
 value = 300.0
 
 [node name="BossSprite" type="AnimatedSprite2D" parent="BossContainer" unique_id=902934259]
-position = Vector2(287.7699, 328.44177)
+position = Vector2(91.678894, 542.2388)
 scale = Vector2(0.42, 0.42)
 sprite_frames = ExtResource("2_tismf")
 animation = &"idle"
@@ -56,24 +167,31 @@ layout_mode = 2
 text = "PLAYER"
 horizontal_alignment = 1
 
-[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=105467521]
-position = Vector2(275, -13)
+[node name="HeroSpriteOld" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=105467521]
+position = Vector2(1043, -537)
 scale = Vector2(0.3, 0.3)
 sprite_frames = ExtResource("3_tismf")
 animation = &"idle"
 
+[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=1717699209]
+position = Vector2(550, -351)
+scale = Vector2(2.888897, 2.3635716)
+sprite_frames = SubResource("SpriteFrames_4x6wu")
+animation = &"heavyattack"
+frame_progress = 0.2179871
+
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
-offset_left = 91.0
-offset_top = 430.0
-offset_right = 651.0
-offset_bottom = 610.0
+offset_left = 65.0
+offset_top = 704.0
+offset_right = 625.0
+offset_bottom = 884.0
 bbcode_enabled = true
 
 [node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
-offset_left = 333.0
-offset_top = 623.0
-offset_right = 893.0
-offset_bottom = 703.0
+offset_left = 75.0
+offset_top = 292.00006
+offset_right = 635.0
+offset_bottom = 372.00006
 scale = Vector2(0.6647501, 0.8052853)
 
 [node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]

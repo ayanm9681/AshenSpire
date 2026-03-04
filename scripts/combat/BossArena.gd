@@ -1,5 +1,5 @@
 # BossArena.gd
-class_name SlashEffect
+class_name BossArena
 extends Node2D
 
 # ─── NODE REFERENCES ──────────────────────────────────────
@@ -59,19 +59,19 @@ func _initialise_ui():
 
 # ─── SIGNAL HANDLERS ──────────────────────────────────────
 func _on_boss_attack_started():
-	play_boss_attack()
-	
+	await play_boss_attack()       # ← await it
+
 func _on_hp_changed(entity, new_hp):
 	if entity == "boss":
 		boss_hp_bar.value = new_hp
-		hit_pause(0.07)
-		flash_sprite(boss_sprite)
-		play_boss_hurt()
+		await hit_pause(0.07)
+		await flash_sprite(boss_sprite)
+		await play_boss_hurt()     # ← await it
 	elif entity == "player":
 		player_hp_bar.value = new_hp
-		hit_pause(0.05)
-		flash_sprite(hero_sprite)
-		play_hero_hurt()
+		await hit_pause(0.05)
+		await flash_sprite(hero_sprite)
+		await play_hero_hurt()     # ← await it
 
 func _on_log_updated(message):
 	combat_log.append_text("\n" + message)
@@ -81,6 +81,7 @@ func _on_telegraph_updated(move, description):
 
 func _on_player_turn_started():
 	_set_buttons_active(true)
+	_start_idle_animations()
 
 func _on_boss_turn_started():
 	_set_buttons_active(false)
@@ -153,50 +154,39 @@ func flash_sprite(sprite: AnimatedSprite2D):
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack():
 	hero_sprite.play("attack")
-	
-	# Spawn slash traveling from hero to boss
 	await spawn_slash(hero_sprite, boss_sprite, "right")
-	
-	# Slash arrived — now trigger hit effects on boss
-	hit_pause(0.07)
-	flash_sprite(boss_sprite)
-	play_boss_hurt()
-
-	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	await hit_pause(0.07)
+	await flash_sprite(boss_sprite)
+	await play_boss_hurt()
+	await get_tree().create_timer(0.4).timeout
 	hero_sprite.play("idle")
 
 func play_hero_heavy_attack():
-	hero_sprite.play("attack")
+	hero_sprite.play("heavyattack")
 	await spawn_slash(hero_sprite, boss_sprite, "right")
-	hit_pause(0.1)
-	flash_sprite(boss_sprite)
-	play_boss_hurt()
-	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	await hit_pause(0.1)
+	await flash_sprite(boss_sprite)
+	await play_boss_hurt()
+	await get_tree().create_timer(0.6).timeout   # longer for heavy
 	hero_sprite.play("idle")
 
 func play_boss_attack():
 	boss_sprite.play("attack")
-	
-	# Spawn slash traveling from boss to hero
 	await spawn_slash(boss_sprite, hero_sprite, "left")
-	
-	# Slash arrived — now trigger hit effects on hero
-	hit_pause(0.05)
-	flash_sprite(hero_sprite)
-	play_hero_hurt()
-
-	# Force a clean return so one-frame attacks never get stuck.
-	await get_tree().create_timer(0.4).timeout  # hold attack pose 0.4s
+	await hit_pause(0.05)
+	await flash_sprite(hero_sprite)
+	await play_hero_hurt()
+	await get_tree().create_timer(0.4).timeout
 	boss_sprite.play("idle")
 
 func play_boss_hurt():
 	boss_sprite.play("hurt")
-	await get_tree().create_timer(0.3).timeout  # hold hurt pose 0.3s
+	await get_tree().create_timer(0.3).timeout
 	boss_sprite.play("idle")
 
 func play_hero_hurt():
 	hero_sprite.play("hurt")
-	await get_tree().create_timer(0.3).timeout  # hold hurt pose 0.3s
+	await get_tree().create_timer(0.3).timeout
 	hero_sprite.play("idle")
 	
 # ─── SLASH EFFECT ─────────────────────────────────────────
