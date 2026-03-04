@@ -58,8 +58,12 @@ func _initialise_ui():
 	combat_log.text = ""
 
 # ─── SIGNAL HANDLERS ──────────────────────────────────────
+var _boss_animating: bool = false
+
 func _on_boss_attack_started():
+	_boss_animating= true
 	await play_boss_attack()       # ← await it
+	_boss_animating= false
 
 func _on_hp_changed(entity, new_hp):
 	if entity == "boss":
@@ -69,10 +73,9 @@ func _on_hp_changed(entity, new_hp):
 		await play_boss_hurt()     # ← await it
 	elif entity == "player":
 		player_hp_bar.value = new_hp
-		if not _hero_animating:
-			await hit_pause(0.05)
-			await flash_sprite(hero_sprite)
-			await play_hero_hurt()     # ← await it
+		await hit_pause(0.05)
+		await flash_sprite(hero_sprite)
+		await play_hero_hurt()     # ← await it
 
 func _on_log_updated(message):
 	combat_log.append_text("\n" + message)
@@ -155,7 +158,7 @@ func flash_player_hit():
 # ─── HIT EFFECTS ──────────────────────────────────────────
 func hit_pause(duration: float = 0.07):
 	Engine.time_scale = 0.05
-	await get_tree().create_timer(duration * 0.05).timeout
+	await get_tree().create_timer(duration, true).timeout
 	Engine.time_scale = 1.0
 
 func flash_sprite(sprite: AnimatedSprite2D):
@@ -168,22 +171,22 @@ func flash_sprite(sprite: AnimatedSprite2D):
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack():
 	hero_sprite.play("attack")
+	await hero_sprite.animation_finished
 	await spawn_slash(hero_sprite, boss_sprite, "right")
 	await get_tree().create_timer(0.4).timeout
 	hero_sprite.play("idle")
 	
 func play_hero_heavy_attack():
 	hero_sprite.play("heavyattack")
+	await hero_sprite.animation_finished
 	await spawn_slash(hero_sprite, boss_sprite, "right")
 	await get_tree().create_timer(0.6).timeout   # longer for heavy
 	hero_sprite.play("idle")
 
 func play_boss_attack():
-	boss_sprite.play("attack")
+	boss_sprite.play("heavyattack")
+	await boss_sprite.animation_finished
 	await spawn_slash(boss_sprite, hero_sprite, "left")
-	await hit_pause(0.05)
-	await flash_sprite(hero_sprite)
-	await play_hero_hurt()
 	await get_tree().create_timer(0.4).timeout
 	boss_sprite.play("idle")
 

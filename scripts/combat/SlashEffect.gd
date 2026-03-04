@@ -14,13 +14,13 @@ func setup(from: Vector2, to: Vector2, direction: String = "right"):
 	global_position = from
 	target_position = to
 	
-	# Rotate to face target
-	var angle = from.angle_to_point(to)
-	rotation = angle
+	## Rotate to face target
+	#var angle = from.angle_to_point(to)
+	#rotation = angle
 	
 	# Flip sprite based on travel direction
 	if direction == "left":
-		slash_sprite.flip_h = true
+		slash_sprite.flip_h = false
 	else:
 		slash_sprite.flip_h = false
 	
@@ -41,13 +41,15 @@ func _process(delta):
 	if distance < 20.0:
 		is_travelling = false
 		emit_signal("arrived")
+		queue_free()
 		return
 	
 	# Move this frame
 	global_position += direction.normalized() * travel_speed * delta
 
 func _on_animation_finished():
-	queue_free()  # Delete itself when animation ends
+	if not is_travelling:
+		queue_free()  # Delete itself when animation ends
 
 # Signal — BossArena listens for this to trigger hit effects
 signal arrived
