@@ -160,11 +160,11 @@ func play_hero_attack():
 	await play_boss_hurt()
 	await get_tree().create_timer(0.4).timeout
 	hero_sprite.play("idle")
-
+	
 func play_hero_heavy_attack():
 	hero_sprite.play("heavyattack")
 	await spawn_slash(hero_sprite, boss_sprite, "right")
-	await hit_pause(0.1)
+	await hit_pause(0.7)
 	await flash_sprite(boss_sprite)
 	await play_boss_hurt()
 	await get_tree().create_timer(0.6).timeout   # longer for heavy

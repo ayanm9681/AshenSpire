@@ -81,7 +81,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("12_l34o1")
 }],
-"loop": true,
+"loop": false,
 "name": &"heavyattack",
 "speed": 10.0
 }, {
@@ -178,7 +178,8 @@ position = Vector2(550, -351)
 scale = Vector2(2.888897, 2.3635716)
 sprite_frames = SubResource("SpriteFrames_4x6wu")
 animation = &"heavyattack"
-frame_progress = 0.2179871
+frame = 7
+frame_progress = 1.0
 
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
 offset_left = 65.0
