@@ -17,14 +17,18 @@ extends Node2D
 @onready var item_btn = $ActionMenu/ItemButton
 @onready var turn_manager = $TurnManager
 
-# Slash scene to instantiate
-const SlashScene = preload("res://scenes/combat/SlashEffect.tscn")
+const RUN_SPEED: float = 900.0
+
+var _hero_start_position: Vector2
+var _boss_start_position: Vector2
 
 # ─── READY ────────────────────────────────────────────────
 func _ready():
 	_connect_signals()
 	_connect_buttons()
 	_initialise_ui()
+	_hero_start_position = hero_sprite.global_position
+	_boss_start_position = boss_sprite.global_position
 	_start_idle_animations()
 
 func _start_idle_animations():
@@ -158,7 +162,7 @@ func flash_player_hit():
 # ─── HIT EFFECTS ──────────────────────────────────────────
 func hit_pause(duration: float = 0.07):
 	Engine.time_scale = 0.05
-	await get_tree().create_timer(duration, true).timeout
+	await get_tree().create_timer(duration, true, false, true).timeout
 	Engine.time_scale = 1.0
 
 func flash_sprite(sprite: AnimatedSprite2D):
@@ -170,25 +174,14 @@ func flash_sprite(sprite: AnimatedSprite2D):
 	
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack():
-	hero_sprite.play("attack")
-	await hero_sprite.animation_finished
-	await spawn_slash(hero_sprite, boss_sprite, "right")
-	await get_tree().create_timer(0.4).timeout
-	hero_sprite.play("idle")
+	await _execute_run_attack(hero_sprite, boss_sprite, _hero_start_position, "attack")
 	
 func play_hero_heavy_attack():
-	hero_sprite.play("heavyattack")
-	await hero_sprite.animation_finished
-	await spawn_slash(hero_sprite, boss_sprite, "right")
-	await get_tree().create_timer(0.6).timeout   # longer for heavy
-	hero_sprite.play("idle")
+	await _execute_run_attack(hero_sprite, boss_sprite, _hero_start_position, "heavyattack")
 
 func play_boss_attack():
-	boss_sprite.play("heavyattack")
-	await boss_sprite.animation_finished
-	await spawn_slash(boss_sprite, hero_sprite, "left")
-	await get_tree().create_timer(0.4).timeout
-	boss_sprite.play("idle")
+	var boss_attack_animation := "heavyattack" if turn_manager.boss_next_move == "HEAVY" else "attack"
+	await _execute_run_attack(boss_sprite, hero_sprite, _boss_start_position, boss_attack_animation)
 
 func play_boss_hurt():
 	boss_sprite.play("hurt")
@@ -199,23 +192,28 @@ func play_hero_hurt():
 	hero_sprite.play("hurt")
 	await get_tree().create_timer(0.3).timeout
 	hero_sprite.play("idle")
-	
-# ─── SLASH EFFECT ─────────────────────────────────────────
-func spawn_slash(from_sprite: AnimatedSprite2D,
-				to_sprite: AnimatedSprite2D,
-				direction: String):
 
-	var slash = SlashScene.instantiate()
-	add_child(slash)
+func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
+	var target_position = _combat_target_position(attacker, target)
+	await _run_to_position(attacker, target_position)
+	attacker.play(attack_animation)
+	await attacker.animation_finished
+	await _run_to_position(attacker, start_position)
+	attacker.play("idle")
 
-	var from_pos = from_sprite.global_position
-	var to_pos = to_sprite.global_position
+func _combat_target_position(attacker: AnimatedSprite2D, target: AnimatedSprite2D) -> Vector2:
+	var direction = sign(target.global_position.x - attacker.global_position.x)
+	if direction == 0:
+		direction = 1
+	return target.global_position - Vector2(direction * 110.0, 0)
 
-	# Cast to Node2D and call setup directly
-	slash.setup(from_pos, to_pos, direction)
+func _run_to_position(sprite: AnimatedSprite2D, destination: Vector2):
+	var distance = sprite.global_position.distance_to(destination)
+	if distance <= 1.0:
+		return
 
-	await slash.arrived
-	return
-	
-
-	
+	sprite.play("run")
+	var duration = distance / RUN_SPEED
+	var tween = create_tween()
+	tween.tween_property(sprite, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
