@@ -503,6 +503,14 @@ animation = &"hurt"
 frame = 2
 frame_progress = 1.0
 
+[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=1717699209]
+position = Vector2(550, -351)
+scale = Vector2(2.888897, 2.3635716)
+sprite_frames = SubResource("SpriteFrames_4x6wu")
+animation = &"heavyattack"
+frame = 7
+frame_progress = 1.0
+
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
 offset_left = 65.0
 offset_top = 704.0
