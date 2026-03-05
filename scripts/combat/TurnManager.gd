@@ -115,8 +115,9 @@ func player_act(action: PlayerAction) -> void:
 
 	turn_state = TurnState.BOSS_TURN
 	emit_signal("boss_turn_started")
-	await get_tree().create_timer(1.5).timeout  # <-- delay before boss attack
+	await get_tree().create_timer(0.35).timeout
 	emit_signal("boss_attack_started")
+	await get_tree().create_timer(0.85).timeout
 	_boss_act()
 
 # ==============================
