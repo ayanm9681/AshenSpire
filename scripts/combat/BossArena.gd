@@ -18,6 +18,8 @@ extends Node2D
 @onready var turn_manager = $TurnManager
 
 const RUN_SPEED: float = 900.0
+const BOSS_NORMAL_ATTACK_ANIMATION: String = "attack"
+const BOSS_HEAVY_ATTACK_ANIMATION: String = "heavyattack"
 
 var _hero_start_position: Vector2
 var _boss_start_position: Vector2
@@ -274,9 +276,17 @@ func play_boss_attack():
 		await get_tree().create_timer(0.6).timeout
 		boss_sprite.play("idle")
 		return
-		
-	var boss_attack_animation := "heavyattack" if turn_manager.boss_next_move == "HEAVY" else "attack"
+
+	var boss_attack_animation := _get_boss_attack_animation(turn_manager.boss_next_move)
 	await _execute_run_attack(boss_sprite, hero_sprite, _boss_start_position, boss_attack_animation)
+
+func _get_boss_attack_animation(next_move: String) -> String:
+	var normalized_move := next_move.strip_edges().to_upper()
+	if normalized_move in ["HEAVY", "MASSIVE OVERHEAD SLASH", "MASSIVE OVERHEAD STRIKE"]:
+		return BOSS_HEAVY_ATTACK_ANIMATION
+	if normalized_move in ["STRIKE", "QUICKSLASH", "QUICK SLASH"]:
+		return BOSS_NORMAL_ATTACK_ANIMATION
+	return BOSS_NORMAL_ATTACK_ANIMATION
 
 func play_boss_hurt():
 	boss_sprite.play("hurt")
