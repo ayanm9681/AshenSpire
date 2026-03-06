@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ck6qq1rjt11un"]
 
 [ext_resource type="Script" uid="uid://cngfsedqp1eab" path="res://scripts/combat/BossArena.gd" id="1_7urrd"]
-[ext_resource type="Texture2D" uid="uid://cyy0ruh4olpm3" path="res://assets/art/backgrounds/HR_Dark Gothic Castle.png" id="2_37tl2"]
+[ext_resource type="Texture2D" uid="uid://bej0cyeagjrv6" path="res://assets/art/backgrounds/lava-background-preview.png" id="2_37tl2"]
 [ext_resource type="Script" uid="uid://c6q5rssb0uu7t" path="res://scripts/combat/TurnManager.gd" id="2_duxwo"]
 [ext_resource type="Texture2D" uid="uid://bd48cagjdmfgu" path="res://assets/art/evilwarden/Idle.png" id="4_frvgk"]
 [ext_resource type="Texture2D" uid="uid://b46tnqwoxbexq" path="res://assets/art/evilwarden/Attack1.png" id="4_qjwkp"]
@@ -654,8 +654,8 @@ animations = [{
 script = ExtResource("1_7urrd")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=858772487]
-position = Vector2(374.99997, 320)
-scale = Vector2(0.4416667, 0.58888894)
+position = Vector2(365.5, 369.5)
+scale = Vector2(1.863426, 3.2375)
 texture = ExtResource("2_37tl2")
 
 [node name="BossContainer" type="VBoxContainer" parent="." unique_id=845270509]
@@ -678,11 +678,12 @@ max_value = 300.0
 value = 300.0
 
 [node name="BossSprite" type="AnimatedSprite2D" parent="BossContainer" unique_id=1782502578]
-position = Vector2(70.72516, 495.7612)
+position = Vector2(64.514786, 506.606)
 scale = Vector2(1.9129248, 2.087549)
 sprite_frames = SubResource("SpriteFrames_kshkn")
-animation = &"run"
-frame_progress = 0.47190255
+animation = &"attack"
+frame = 7
+frame_progress = 1.0
 
 [node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
 offset_left = 82.0
@@ -702,19 +703,11 @@ text = "PLAYER"
 horizontal_alignment = 1
 
 [node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=1717699209]
-position = Vector2(501, -346)
+position = Vector2(506, -340)
 scale = Vector2(2.2921433, 2.5614226)
 sprite_frames = SubResource("SpriteFrames_4x6wu")
 animation = &"run"
 frame_progress = 0.91365844
-
-[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=1717699209]
-position = Vector2(550, -351)
-scale = Vector2(2.888897, 2.3635716)
-sprite_frames = SubResource("SpriteFrames_4x6wu")
-animation = &"heavyattack"
-frame = 7
-frame_progress = 1.0
 
 [node name="CombatLog" type="RichTextLabel" parent="." unique_id=1164511084]
 offset_left = 65.0

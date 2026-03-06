@@ -268,6 +268,13 @@ func play_hero_heavy_attack():
 	await _execute_run_attack(hero_sprite, boss_sprite, _hero_start_position, "heavyattack")
 
 func play_boss_attack():
+	if turn_manager.boss_next_move == "ENDURE":
+		# Just play the animation in place, no running
+		boss_sprite.play("idle")  # or a dedicated "endure" animation if you have one
+		await get_tree().create_timer(0.6).timeout
+		boss_sprite.play("idle")
+		return
+		
 	var boss_attack_animation := "heavyattack" if turn_manager.boss_next_move == "HEAVY" else "attack"
 	await _execute_run_attack(boss_sprite, hero_sprite, _boss_start_position, boss_attack_animation)
 
@@ -293,7 +300,7 @@ func _combat_target_position(attacker: AnimatedSprite2D, target: AnimatedSprite2
 	var direction = sign(target.global_position.x - attacker.global_position.x)
 	if direction == 0:
 		direction = 1
-	return target.global_position - Vector2(direction * 110.0, 0)
+	return Vector2(target.global_position.x - direction * 110.0, attacker.global_position.y)
 
 func _run_to_position(sprite: AnimatedSprite2D, destination: Vector2):
 	var distance = sprite.global_position.distance_to(destination)
