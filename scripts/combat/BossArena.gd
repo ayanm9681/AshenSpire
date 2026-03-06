@@ -21,14 +21,18 @@ const RUN_SPEED: float = 900.0
 
 var _hero_start_position: Vector2
 var _boss_start_position: Vector2
+var _arena_base_position: Vector2
+var _is_shaking: bool = false
 
 # ─── READY ────────────────────────────────────────────────
 func _ready():
 	_connect_signals()
 	_connect_buttons()
 	_initialise_ui()
+	_apply_ui_style()
 	_hero_start_position = hero_sprite.global_position
 	_boss_start_position = boss_sprite.global_position
+	_arena_base_position = global_position
 	_start_idle_animations()
 
 func _start_idle_animations():
@@ -72,11 +76,13 @@ func _on_boss_attack_started():
 func _on_hp_changed(entity, new_hp):
 	if entity == "boss":
 		boss_hp_bar.value = new_hp
+		await _screen_shake(18.0, 0.2)
 		await hit_pause(0.07)
 		await flash_sprite(boss_sprite)
 		await play_boss_hurt()     # ← await it
 	elif entity == "player":
 		player_hp_bar.value = new_hp
+		await _screen_shake(14.0, 0.18)
 		await hit_pause(0.05)
 		await flash_sprite(hero_sprite)
 		await play_hero_hurt()     # ← await it
@@ -144,6 +150,88 @@ func _set_buttons_active(active):
 	heavy_attack_btn.disabled = not active
 	defend_btn.disabled = not active
 	item_btn.disabled = not active
+
+func _apply_ui_style():
+	boss_hp_bar.self_modulate = Color(1.0, 0.92, 0.92)
+	player_hp_bar.self_modulate = Color(0.9, 1.0, 0.95)
+
+	boss_hp_bar.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+	player_hp_bar.add_theme_color_override("font_color", Color(0.92, 1.0, 0.95))
+
+	boss_hp_bar.add_theme_stylebox_override("fill", _make_bar_style(Color(0.8, 0.18, 0.25), Color(0.5, 0.05, 0.12)))
+	boss_hp_bar.add_theme_stylebox_override("background", _make_bar_style(Color(0.16, 0.05, 0.08), Color(0.3, 0.1, 0.15)))
+
+	player_hp_bar.add_theme_stylebox_override("fill", _make_bar_style(Color(0.19, 0.75, 0.4), Color(0.05, 0.38, 0.2)))
+	player_hp_bar.add_theme_stylebox_override("background", _make_bar_style(Color(0.04, 0.14, 0.09), Color(0.07, 0.2, 0.12)))
+
+	_apply_button_style(attack_btn, Color(0.85, 0.22, 0.22), Color(1.0, 0.67, 0.2))
+	_apply_button_style(heavy_attack_btn, Color(0.62, 0.18, 0.78), Color(0.32, 0.15, 0.7))
+	_apply_button_style(defend_btn, Color(0.15, 0.47, 0.88), Color(0.09, 0.31, 0.67))
+	_apply_button_style(item_btn, Color(0.94, 0.64, 0.16), Color(0.88, 0.42, 0.08))
+
+func _make_bar_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = fill_color
+	style.border_color = border_color
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	return style
+
+func _apply_button_style(button: Button, primary: Color, accent: Color):
+	button.add_theme_color_override("font_color", Color(0.98, 0.98, 0.98))
+	button.add_theme_color_override("font_focus_color", Color(1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
+	button.add_theme_color_override("font_disabled_color", Color(0.7, 0.7, 0.7, 0.8))
+
+	button.add_theme_stylebox_override("normal", _make_button_style(primary, accent, 10, 2))
+	button.add_theme_stylebox_override("hover", _make_button_style(primary.lightened(0.2), accent.lightened(0.15), 10, 2))
+	button.add_theme_stylebox_override("pressed", _make_button_style(primary.darkened(0.18), accent.darkened(0.2), 10, 2))
+	button.add_theme_stylebox_override("disabled", _make_button_style(Color(0.25, 0.25, 0.25, 0.65), Color(0.12, 0.12, 0.12, 0.8), 10, 1))
+
+func _make_button_style(fill_color: Color, border_color: Color, corner_radius: int, border_size: int) -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = fill_color
+	style.border_color = border_color
+	style.border_width_left = border_size
+	style.border_width_top = border_size
+	style.border_width_right = border_size
+	style.border_width_bottom = border_size
+	style.corner_radius_top_left = corner_radius
+	style.corner_radius_top_right = corner_radius
+	style.corner_radius_bottom_right = corner_radius
+	style.corner_radius_bottom_left = corner_radius
+	style.shadow_color = Color(0, 0, 0, 0.35)
+	style.shadow_size = 3
+	style.content_margin_left = 10.0
+	style.content_margin_right = 10.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 8.0
+	return style
+
+func _screen_shake(strength: float, duration: float):
+	if _is_shaking:
+		return
+
+	_is_shaking = true
+	var elapsed := 0.0
+	while elapsed < duration:
+		var damper := 1.0 - (elapsed / duration)
+		global_position = _arena_base_position + Vector2(
+			randf_range(-strength, strength) * damper,
+			randf_range(-strength * 0.5, strength * 0.5) * damper
+		)
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+
+	global_position = _arena_base_position
+	_is_shaking = false
 
 # ─── VISUAL EFFECTS ───────────────────────────────────────
 func flash_boss_hit():
