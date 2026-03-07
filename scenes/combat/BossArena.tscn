@@ -1224,6 +1224,14 @@ animation = &"death"
 frame = 6
 frame_progress = 1.0
 
+[node name="BossSprite2" type="AnimatedSprite2D" parent="BossContainer" unique_id=1782739009]
+position = Vector2(1222, -561)
+scale = Vector2(2.2921433, 2.5614226)
+sprite_frames = SubResource("SpriteFrames_4x6wu")
+animation = &"defend"
+frame = 1
+frame_progress = 1.0
+
 [node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
 offset_left = 78.0
 offset_top = 898.0
@@ -1240,14 +1248,6 @@ value = 100.0
 layout_mode = 2
 text = "PLAYER"
 horizontal_alignment = 1
-
-[node name="HeroSprite" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=1717699209]
-position = Vector2(1222, -561)
-scale = Vector2(2.2921433, 2.5614226)
-sprite_frames = SubResource("SpriteFrames_4x6wu")
-animation = &"defend"
-frame = 1
-frame_progress = 1.0
 
 [node name="HeroSprite2" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=402098460]
 position = Vector2(525.99994, -319)

@@ -37,11 +37,11 @@ func _ready():
 	_initialise_ui()
 	_apply_ui_style()
 	await get_tree().process_frame   # wait for layout
-	active_hero = hero_sprite
-	hero_sprite2.visible = false
-	sword_attack_btn.visible = false
-	sword_heavy_btn.visible = false
-	_hero_start_position = hero_sprite.global_position
+	active_hero = hero_sprite2
+	hero_sprite2.visible = true
+	sword_attack_btn.visible = true
+	sword_heavy_btn.visible = true
+	_hero_start_position = hero_sprite2.global_position
 	_boss_start_position = boss_sprite.global_position
 	_arena_base_position = global_position
 	_start_idle_animations()
@@ -97,7 +97,7 @@ func _on_hp_changed(entity, new_hp):
 		player_hp_bar.value = new_hp
 		await _screen_shake(14.0, 0.18)
 		await hit_pause(0.05)
-		await flash_sprite(hero_sprite)
+		await flash_sprite(active_hero)
 		await play_hero_hurt()     # ← await it
 
 func _on_log_updated(message):
@@ -125,7 +125,7 @@ func _on_combat_ended(player_won):
 func _on_loadout_swapped(new_loadout):
 	var is_sword = new_loadout.is_sword_loadout()
 
-	hero_sprite.visible = not is_sword
+	hero_sprite2.visible = not is_sword
 	hero_sprite2.visible = is_sword
 	active_hero = hero_sprite2 if is_sword else hero_sprite
 
@@ -326,7 +326,7 @@ func play_boss_attack():
 		return
 
 	var boss_attack_animation := _get_boss_attack_animation(turn_manager.boss_next_move)
-	await _execute_run_attack(boss_sprite, hero_sprite, _boss_start_position, boss_attack_animation)
+	await _execute_run_attack(boss_sprite, active_hero, _boss_start_position, boss_attack_animation)
 
 func _get_boss_attack_animation(next_move: String) -> String:
 	var normalized_move := next_move.strip_edges().to_upper()
