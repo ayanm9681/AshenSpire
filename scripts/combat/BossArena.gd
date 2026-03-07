@@ -333,6 +333,14 @@ func _get_boss_attack_animation(next_move: String) -> String:
 		return BOSS_NORMAL_ATTACK_ANIMATION
 	return BOSS_NORMAL_ATTACK_ANIMATION
 
+func _get_boss_attack_animation(next_move: String) -> String:
+	var normalized_move := next_move.strip_edges().to_upper()
+	if normalized_move in ["HEAVY", "MASSIVE OVERHEAD SLASH", "MASSIVE OVERHEAD STRIKE"]:
+		return BOSS_HEAVY_ATTACK_ANIMATION
+	if normalized_move in ["STRIKE", "QUICKSLASH", "QUICK SLASH"]:
+		return BOSS_NORMAL_ATTACK_ANIMATION
+	return BOSS_NORMAL_ATTACK_ANIMATION
+
 func play_boss_hurt():
 	boss_sprite.play("hurt")
 	await get_tree().create_timer(0.3).timeout

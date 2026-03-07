@@ -1232,6 +1232,12 @@ animation = &"defend"
 frame = 1
 frame_progress = 1.0
 
+[node name="BossSprite2" type="AnimatedSprite2D" parent="BossContainer" unique_id=1662946064]
+position = Vector2(506, -340)
+scale = Vector2(-2.6620963, 2.9856462)
+sprite_frames = SubResource("SpriteFrames_4x6wu")
+animation = &"death"
+
 [node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
 offset_left = 78.0
 offset_top = 898.0
