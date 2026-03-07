@@ -5,8 +5,7 @@ extends Node2D
 # ─── NODE REFERENCES ──────────────────────────────────────
 @onready var boss_hp_bar = $BossContainer/BossHealthBar
 @onready var boss_name_label = $BossContainer/BossName
-@onready var boss_sprite = $BossContainer/BossSprite        # AnimatedSprite2D
-@onready var hero_sprite = $PlayerContainer/HeroSprite      # AnimatedSprite2D
+@onready var boss_sprite = $BossContainer/BossSprite        # AnimatedSprite2D    # AnimatedSprite2D
 @onready var player_hp_bar = $PlayerContainer/PlayerHealthBar
 @onready var player_name_label = $PlayerContainer/PlayerName
 @onready var telegraph_label = $TelegraphBox/TelegraphLabel
@@ -39,6 +38,8 @@ func _ready():
 	await get_tree().process_frame   # wait for layout
 	active_hero = hero_sprite2
 	hero_sprite2.visible = true
+	attack_btn.visible = true
+	heavy_attack_btn.visible = true
 	sword_attack_btn.visible = true
 	sword_heavy_btn.visible = true
 	_hero_start_position = hero_sprite2.global_position
@@ -123,16 +124,12 @@ func _on_combat_ended(player_won):
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
 
 func _on_loadout_swapped(new_loadout):
-	var is_sword = new_loadout.is_sword_loadout()
+	active_hero = hero_sprite2   # always hero_sprite2 now
 
-	hero_sprite2.visible = not is_sword
-	hero_sprite2.visible = is_sword
-	active_hero = hero_sprite2 if is_sword else hero_sprite
-
-	attack_btn.visible = not is_sword
-	heavy_attack_btn.visible = not is_sword
-	sword_attack_btn.visible = is_sword
-	sword_heavy_btn.visible = is_sword
+	attack_btn.visible = true
+	heavy_attack_btn.visible = true
+	sword_attack_btn.visible = true
+	sword_heavy_btn.visible = true
 
 	_hero_start_position = active_hero.global_position
 	active_hero.play("idle")
