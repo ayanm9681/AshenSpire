@@ -23,30 +23,33 @@ func _ready():
 	_initialise_loadouts()
 
 func _initialise_loadouts():
-	# Active loadout — what player starts with
+	# Active loadout — Excalibur
 	active_loadout = LoadoutData.new()
-	active_loadout.weapon_name = "Worn Blade"
+	active_loadout.weapon_name = "EXCALIBUR"
 	active_loadout.weapon_damage = 22
 	active_loadout.armor_name = "Leather Plate"
 	active_loadout.armor_defense = 8
 	active_loadout.consumables = ["Ember Flask", "Whetstone"]
+	active_loadout.weapon_type = LoadoutData.WeaponType.EXCALIBUR  # ← add this
 
-	# Backup slot 1
+	# Backup slot 1 — Durandal
 	var backup1 = LoadoutData.new()
-	backup1.weapon_name = "Cracked Sword"
+	backup1.weapon_name = "DURANDAL"
 	backup1.weapon_damage = 16
 	backup1.armor_name = "Worn Padding"
 	backup1.armor_defense = 5
 	backup1.consumables = ["Ember Flask"]
+	backup1.weapon_type = LoadoutData.WeaponType.DURANDAL           # ← add this
 	backup_loadouts.append(backup1)
 
-	# Backup slot 2
+	# Backup slot 2 — Sunsword
 	var backup2 = LoadoutData.new()
-	backup2.weapon_name = "Rusted Dagger"
+	backup2.weapon_name = "SUNSWORD"
 	backup2.weapon_damage = 12
 	backup2.armor_name = "Torn Cloth"
 	backup2.armor_defense = 3
 	backup2.consumables = []
+	backup2.weapon_type = LoadoutData.WeaponType.SUNSWORD           # ← add this
 	backup_loadouts.append(backup2)
 
 # ─── DEATH HANDLER ────────────────────────────────────────
