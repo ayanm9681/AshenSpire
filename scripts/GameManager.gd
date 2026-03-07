@@ -8,6 +8,10 @@ var player_hp: int = 100
 var player_max_hp: int = 100
 var current_floor: int = 1
 
+# ─── DAMAGE PROFILES ─────────────────────────────────────
+var default_weapon_damage: int = 10
+var default_heavy_multiplier: float = 1.8
+
 # ─── ACTIVE LOADOUT ───────────────────────────────────────
 var active_loadout: LoadoutData = null
 

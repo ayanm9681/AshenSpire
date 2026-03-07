@@ -42,7 +42,8 @@ var turn_state: TurnState = TurnState.PLAYER_TURN
 
 var player_max_hp: int = 100
 var player_hp: int = 100
-var player_damage: int = 0
+var default_player_damage: int = 0
+var sword_player_damage: int = 0
 var player_defense: int = 0
 var player_is_defending: bool = false
 
@@ -87,7 +88,8 @@ func _ready() -> void:
 # ==============================
 
 func _apply_loadout_stats() -> void:
-	player_damage = GameManager.active_loadout.weapon_damage
+	default_player_damage = GameManager.default_weapon_damage
+	sword_player_damage = GameManager.active_loadout.weapon_damage
 	player_defense = GameManager.active_loadout.armor_defense
 	player_hp = player_max_hp
 	GameManager.player_hp = player_hp 
@@ -107,9 +109,9 @@ func player_act(action: PlayerAction) -> void:
 		PlayerAction.HEAVY_ATTACK:
 			_player_heavy_attack()
 		PlayerAction.SWORD_ATTACK:
-			_player_attack()
+			_player_sword_attack()
 		PlayerAction.SWORD_HEAVY:
-			_player_heavy_attack()
+			_player_sword_heavy_attack()
 		PlayerAction.DEFEND:
 			_player_defend()
 		PlayerAction.USE_ITEM:
@@ -131,7 +133,7 @@ func player_act(action: PlayerAction) -> void:
 # ==============================
 
 func _player_attack() -> void:
-	var base: int = player_damage - boss_defense
+	var base: int = default_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
 
 	damage += 2  # small balance adjustment
@@ -147,9 +149,8 @@ func _player_attack() -> void:
 	_check_echo_threshold()
 
 func _player_heavy_attack() -> void:
-	GameManager.active_loadout.degrade_weapon(5) 
-	var base: int = player_damage - boss_defense
-	var damage: int = int(max(base, 1) * 1.8)
+	var base: int = default_player_damage - boss_defense
+	var damage: int = int(max(base, 1) * GameManager.default_heavy_multiplier)
 
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
@@ -157,6 +158,38 @@ func _player_heavy_attack() -> void:
 	threshold_turns += 1
 
 	emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage." % damage)
+	emit_signal("hp_changed", "boss", boss_hp)
+
+	_check_echo_threshold()
+
+func _player_sword_attack() -> void:
+	var base: int = sword_player_damage - boss_defense
+	var damage: int = base if base > 0 else 1
+
+	damage += 2
+
+	boss_hp -= damage
+	boss_hp = max(0, boss_hp)
+	threshold_damage_dealt += damage
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "Sword attack dealt %d damage." % damage)
+	emit_signal("hp_changed", "boss", boss_hp)
+
+	_check_echo_threshold()
+
+func _player_sword_heavy_attack() -> void:
+	GameManager.active_loadout.degrade_weapon(5)
+	sword_player_damage = GameManager.active_loadout.effective_damage()
+	var base: int = sword_player_damage - boss_defense
+	var damage: int = int(max(base, 1) * 1.8)
+
+	boss_hp -= damage
+	boss_hp = max(0, boss_hp)
+	threshold_damage_dealt += damage
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "You unleash a SWORD HEAVY strike for %d damage." % damage)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
