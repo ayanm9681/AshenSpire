@@ -16,6 +16,10 @@ extends Node2D
 @onready var defend_btn = $ActionMenu/DefendButton
 @onready var item_btn = $ActionMenu/ItemButton
 @onready var turn_manager = $TurnManager
+@onready var hero_sprite2 = $PlayerContainer/HeroSprite2    # sword hero
+@onready var sword_attack_btn = $ActionMenu/SwordAttackButton
+@onready var sword_heavy_btn = $ActionMenu/SwordHeavyButton
+var active_hero: AnimatedSprite2D
 
 const RUN_SPEED: float = 900.0
 const BOSS_NORMAL_ATTACK_ANIMATION: String = "attack"
@@ -32,6 +36,11 @@ func _ready():
 	_connect_buttons()
 	_initialise_ui()
 	_apply_ui_style()
+	await get_tree().process_frame   # wait for layout
+	active_hero = hero_sprite
+	hero_sprite2.visible = false
+	sword_attack_btn.visible = false
+	sword_heavy_btn.visible = false
 	_hero_start_position = hero_sprite.global_position
 	_boss_start_position = boss_sprite.global_position
 	_arena_base_position = global_position
@@ -39,7 +48,7 @@ func _ready():
 
 func _start_idle_animations():
 	boss_sprite.play("idle")
-	hero_sprite.play("idle")
+	active_hero.play("idle")
 
 func _connect_signals():
 	turn_manager.hp_changed.connect(_on_hp_changed)
@@ -56,6 +65,8 @@ func _connect_buttons():
 	heavy_attack_btn.pressed.connect(_on_heavy_attack_pressed)
 	defend_btn.pressed.connect(_on_defend_pressed)
 	item_btn.pressed.connect(_on_item_pressed)
+	sword_attack_btn.pressed.connect(_on_sword_attack_pressed)
+	sword_heavy_btn.pressed.connect(_on_sword_heavy_pressed)
 
 func _initialise_ui():
 	boss_name_label.text = "THE WARDEN"
@@ -112,6 +123,20 @@ func _on_combat_ended(player_won):
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
 
 func _on_loadout_swapped(new_loadout):
+	var is_sword = new_loadout.is_sword_loadout()
+
+	hero_sprite.visible = not is_sword
+	hero_sprite2.visible = is_sword
+	active_hero = hero_sprite2 if is_sword else hero_sprite
+
+	attack_btn.visible = not is_sword
+	heavy_attack_btn.visible = not is_sword
+	sword_attack_btn.visible = is_sword
+	sword_heavy_btn.visible = is_sword
+
+	_hero_start_position = active_hero.global_position
+	active_hero.play("idle")
+
 	combat_log.append_text(
 		"\nEquipping: %s (DMG: %d)" % [
 			new_loadout.weapon_name,
@@ -130,6 +155,7 @@ func _on_attack_pressed():
 	await play_hero_attack()
 	_hero_animating= false                             # ← hero attacks
 	turn_manager.player_act(TurnManager.PlayerAction.ATTACK)
+
 	
 func _on_heavy_attack_pressed():
 	if _hero_animating:
@@ -139,6 +165,26 @@ func _on_heavy_attack_pressed():
 	await play_hero_heavy_attack()
 	_hero_animating = false
 	turn_manager.player_act(TurnManager.PlayerAction.HEAVY_ATTACK)
+	
+func _on_sword_attack_pressed():
+	if _hero_animating:
+		return
+	_hero_animating = true
+	_set_buttons_active(false)
+	var anim = GameManager.active_loadout.get_attack_animation()
+	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
+	_hero_animating = false
+	turn_manager.player_act(TurnManager.PlayerAction.SWORD_ATTACK)
+
+func _on_sword_heavy_pressed():
+	if _hero_animating:
+		return
+	_hero_animating = true
+	_set_buttons_active(false)
+	var anim = GameManager.active_loadout.get_heavy_animation()
+	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
+	_hero_animating = false
+	turn_manager.player_act(TurnManager.PlayerAction.SWORD_HEAVY)
 
 func _on_defend_pressed():
 	turn_manager.player_act(TurnManager.PlayerAction.DEFEND)
@@ -152,6 +198,8 @@ func _set_buttons_active(active):
 	heavy_attack_btn.disabled = not active
 	defend_btn.disabled = not active
 	item_btn.disabled = not active
+	sword_attack_btn.disabled = not active
+	sword_heavy_btn.disabled = not active
 
 func _apply_ui_style():
 	boss_hp_bar.self_modulate = Color(1.0, 0.92, 0.92)
@@ -264,10 +312,10 @@ func flash_sprite(sprite: AnimatedSprite2D):
 	
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack():
-	await _execute_run_attack(hero_sprite, boss_sprite, _hero_start_position, "attack")
+	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, "attack")
 	
 func play_hero_heavy_attack():
-	await _execute_run_attack(hero_sprite, boss_sprite, _hero_start_position, "heavyattack")
+	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, "heavyattack")
 
 func play_boss_attack():
 	if turn_manager.boss_next_move == "ENDURE":
@@ -294,9 +342,9 @@ func play_boss_hurt():
 	boss_sprite.play("idle")
 
 func play_hero_hurt():
-	hero_sprite.play("hurt")
+	active_hero.play("hurt")
 	await get_tree().create_timer(0.3).timeout
-	hero_sprite.play("idle")
+	active_hero.play("idle")
 
 func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
 	var target_position = _combat_target_position(attacker, target)

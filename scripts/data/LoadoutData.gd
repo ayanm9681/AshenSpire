@@ -15,6 +15,14 @@ var armor_name: String = ""
 var armor_defense: int = 0
 var armor_durability: int = 100
 
+enum WeaponType {
+	DEFAULT,
+	EXCALIBUR,
+	DURANDAL,
+	SUNSWORD
+}
+var weapon_type: WeaponType = WeaponType.DEFAULT
+
 # ─── CONSUMABLES ──────────────────────────────────────────
 var consumables: Array = []
 
@@ -66,3 +74,20 @@ func get_summary() -> String:
 	if is_empty():
 		return "Empty"
 	return "%s / %s [%s]" % [weapon_name, armor_name, weapon_condition()]
+
+func get_attack_animation() -> String:
+	match weapon_type:
+		WeaponType.EXCALIBUR: return "excalibur_attack"
+		WeaponType.DURANDAL:  return "durandal_attack"
+		WeaponType.SUNSWORD:  return "sunsword_attack"
+		_: return "attack"
+
+func get_heavy_animation() -> String:
+	match weapon_type:
+		WeaponType.EXCALIBUR: return "excalibur_heavy"
+		WeaponType.DURANDAL:  return "durandal_heavy"
+		WeaponType.SUNSWORD:  return "sunsword_heavy"
+		_: return "heavyattack"
+		
+func is_sword_loadout() -> bool:
+	return weapon_type != WeaponType.DEFAULT

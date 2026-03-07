@@ -22,6 +22,8 @@ signal loadout_swapped(new_loadout)
 enum PlayerAction {
 	ATTACK,
 	HEAVY_ATTACK,
+	SWORD_ATTACK,   # ← new
+	SWORD_HEAVY,    # ← new
 	DEFEND,
 	USE_ITEM
 }
@@ -103,6 +105,10 @@ func player_act(action: PlayerAction) -> void:
 		PlayerAction.ATTACK:
 			_player_attack()
 		PlayerAction.HEAVY_ATTACK:
+			_player_heavy_attack()
+		PlayerAction.SWORD_ATTACK:
+			_player_attack()
+		PlayerAction.SWORD_HEAVY:
 			_player_heavy_attack()
 		PlayerAction.DEFEND:
 			_player_defend()
