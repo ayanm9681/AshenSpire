@@ -213,6 +213,8 @@ func _apply_ui_style():
 
 	_apply_button_style(attack_btn, Color(0.85, 0.22, 0.22), Color(1.0, 0.67, 0.2))
 	_apply_button_style(heavy_attack_btn, Color(0.62, 0.18, 0.78), Color(0.32, 0.15, 0.7))
+	_apply_button_style(sword_attack_btn, Color(0.2, 0.62, 0.86), Color(0.12, 0.38, 0.65))
+	_apply_button_style(sword_heavy_btn, Color(0.12, 0.72, 0.55), Color(0.08, 0.45, 0.32))
 	_apply_button_style(defend_btn, Color(0.15, 0.47, 0.88), Color(0.09, 0.31, 0.67))
 	_apply_button_style(item_btn, Color(0.94, 0.64, 0.16), Color(0.88, 0.42, 0.08))
 
