@@ -51,8 +51,8 @@ var player_is_defending: bool = false
 # BOSS STATS
 # ==============================
 
-var boss_max_hp: int = 300
-var boss_hp: int = 300
+var boss_max_hp: int = 1200
+var boss_hp: int = 900
 var boss_damage: int = 18
 var boss_defense: int = 5
 
