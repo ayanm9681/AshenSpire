@@ -52,7 +52,7 @@ var player_is_defending: bool = false
 # ==============================
 
 var boss_max_hp: int = 1200
-var boss_hp: int = 900
+var boss_hp: int = 1200
 var boss_damage: int = 18
 var boss_defense: int = 5
 
@@ -65,7 +65,7 @@ var last_boss_move: String = ""
 
 var threshold_damage_dealt: int = 0
 var threshold_turns: int = 0
-var threshold_required_damage: int = 140
+var threshold_required_damage: float = boss_hp*0.15
 var threshold_turn_window: int = 6
 var echo_threshold_met: bool = false
 
