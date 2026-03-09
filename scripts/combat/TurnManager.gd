@@ -14,6 +14,7 @@ signal player_turn_started()
 signal boss_turn_started()
 signal combat_ended(player_won: bool)
 signal loadout_swapped(new_loadout)
+signal charges_updated(charges: int, max_charges: int)
 
 # ==============================
 # ENUMS
@@ -91,8 +92,9 @@ func _apply_loadout_stats() -> void:
 	default_player_damage = GameManager.default_weapon_damage
 	sword_player_damage = GameManager.active_loadout.weapon_damage
 	player_defense = GameManager.active_loadout.armor_defense
-	player_hp = player_max_hp
-	GameManager.player_hp = player_hp 
+	player_hp = GameManager.active_loadout.current_hp
+	player_max_hp = GameManager.active_loadout.max_hp
+	GameManager.player_hp = player_hp
 # ==============================
 # PLAYER ACTION ENTRY
 # ==============================
@@ -132,6 +134,26 @@ func player_act(action: PlayerAction) -> void:
 # PLAYER ACTIONS
 # ==============================
 
+func player_swap_loadout(loadout_index: int) -> void:
+	if turn_state != TurnState.PLAYER_TURN:
+		return
+	# Save current HP to active loadout before swapping
+	GameManager.active_loadout.current_hp = player_hp
+	var success = GameManager.swap_to_loadout(loadout_index)
+	if success:
+		_apply_loadout_stats()
+		emit_signal("loadout_swapped", GameManager.active_loadout)
+		emit_signal("hp_changed", "player", player_hp)
+		emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
+		emit_signal("combat_log_updated", "Switched to %s!" % GameManager.active_loadout.weapon_name)
+		# Counts as your turn
+		turn_state = TurnState.BOSS_TURN
+		emit_signal("boss_turn_started")
+		await get_tree().create_timer(0.35).timeout
+		emit_signal("boss_attack_started")
+		await get_tree().create_timer(0.85).timeout
+		_boss_act()
+
 func _player_attack() -> void:
 	var base: int = default_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
@@ -163,35 +185,39 @@ func _player_heavy_attack() -> void:
 	_check_echo_threshold()
 
 func _player_sword_attack() -> void:
+	if not GameManager.active_loadout.use_sword_charge():
+		emit_signal("combat_log_updated", "No sword charges remaining!")
+		# Still costs a turn but does no damage
+		threshold_turns += 1
+		return
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
-
 	damage += 2
-
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-
-	emit_signal("combat_log_updated", "Sword attack dealt %d damage." % damage)
+	emit_signal("combat_log_updated", "Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
 	emit_signal("hp_changed", "boss", boss_hp)
-
+	emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
 	_check_echo_threshold()
 
 func _player_sword_heavy_attack() -> void:
+	if not GameManager.active_loadout.use_sword_charge():
+		emit_signal("combat_log_updated", "No sword charges remaining!")
+		threshold_turns += 1
+		return
 	GameManager.active_loadout.degrade_weapon(5)
 	sword_player_damage = GameManager.active_loadout.effective_damage()
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = int(max(base, 1) * 1.8)
-
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-
-	emit_signal("combat_log_updated", "You unleash a SWORD HEAVY strike for %d damage." % damage)
+	emit_signal("combat_log_updated", "SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
 	emit_signal("hp_changed", "boss", boss_hp)
-
+	emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
 	_check_echo_threshold()
 
 func _player_defend() -> void:
@@ -203,6 +229,8 @@ func _player_use_item() -> void:
 	var heal: int = 25
 	player_hp = min(player_max_hp, player_hp + heal)
 	threshold_turns += 1
+	GameManager.player_hp = player_hp
+	GameManager.active_loadout.current_hp = player_hp
 
 	emit_signal("combat_log_updated", "You healed %d HP." % heal)
 	emit_signal("hp_changed", "player", player_hp)
@@ -243,6 +271,7 @@ func _boss_act() -> void:
 	player_hp -= final_damage
 	player_hp = max(0, player_hp)
 	GameManager.player_hp = player_hp
+	GameManager.active_loadout.current_hp = player_hp
 	emit_signal("combat_log_updated", "You took %d damage." % final_damage)
 	emit_signal("hp_changed", "player", player_hp)
 	

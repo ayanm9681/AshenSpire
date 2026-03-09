@@ -1276,10 +1276,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ActionMenu" type="GridContainer" parent="." unique_id=1440649870]
-offset_left = 42.0
-offset_top = 1064.0
-offset_right = 682.0
-offset_bottom = 1282.0
+offset_left = 38.0
+offset_top = 1016.0
+offset_right = 678.0
+offset_bottom = 1246.0
 scale = Vector2(1.0153196, 1)
 columns = 2
 
@@ -1313,5 +1313,39 @@ custom_minimum_size = Vector2(300, 70)
 layout_mode = 2
 text = "USE ITEM"
 
+[node name="LoadoutButton" type="Button" parent="ActionMenu" unique_id=1282546988]
+layout_mode = 2
+
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
 script = ExtResource("2_duxwo")
+
+[node name="LoadoutPanel" type="Panel" parent="." unique_id=1259115528]
+offset_left = 58.0
+offset_top = 207.0
+offset_right = 98.0
+offset_bottom = 247.0
+scale = Vector2(15.127248, 2.0005465)
+
+[node name="Slot0Button" type="Button" parent="LoadoutPanel" unique_id=233404298]
+layout_mode = 0
+offset_left = 2.3798108
+offset_top = 2.4993134
+offset_right = 10.999531
+offset_bottom = 12.190821
+scale = Vector2(1.5261598, 3.8167326)
+
+[node name="Slot1Button" type="Button" parent="LoadoutPanel" unique_id=534976619]
+layout_mode = 0
+offset_left = 15.865414
+offset_top = 1.4995902
+offset_right = 23.865414
+offset_bottom = 12.559219
+scale = Vector2(1.5048184, 3.3897839)
+
+[node name="Slot2Button" type="Button" parent="LoadoutPanel" unique_id=420884402]
+layout_mode = 0
+offset_left = 28.954374
+offset_top = 1.9994535
+offset_right = 36.954376
+offset_bottom = 9.999454
+scale = Vector2(1.369807, 4.4939194)

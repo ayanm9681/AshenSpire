@@ -82,3 +82,14 @@ func reset_run():
 	echo_threshold_met = false
 	echo_snapshot = {}
 	_initialise_loadouts()
+
+func swap_to_loadout(index: int) -> bool:
+	# index 0 = first backup, 1 = second, etc.
+	if index < 0 or index >= backup_loadouts.size():
+		return false
+	# Put active loadout back into its slot
+	# Find where the target loadout is and swap
+	var target = backup_loadouts[index]
+	backup_loadouts[index] = active_loadout
+	active_loadout = target
+	return true

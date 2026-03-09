@@ -18,6 +18,15 @@ extends Node2D
 @onready var hero_sprite2 = $PlayerContainer/HeroSprite2    # sword hero
 @onready var sword_attack_btn = $ActionMenu/SwordAttackButton
 @onready var sword_heavy_btn = $ActionMenu/SwordHeavyButton
+@onready var loadout_btn = $ActionMenu/LoadoutButton
+@onready var charges_label = $ActionMenu/SwordAttackButton/ChargesLabel
+@onready var loadout_panel = $LoadoutPanel
+@onready var loadout_slot_btns = [
+	$LoadoutPanel/Slot0Button,
+	$LoadoutPanel/Slot1Button,
+	$LoadoutPanel/Slot2Button
+]
+
 var active_hero: AnimatedSprite2D
 
 const RUN_SPEED: float = 900.0
@@ -60,6 +69,7 @@ func _connect_signals():
 	turn_manager.boss_turn_started.connect(_on_boss_turn_started)
 	turn_manager.combat_ended.connect(_on_combat_ended)
 	turn_manager.loadout_swapped.connect(_on_loadout_swapped)
+	turn_manager.charges_updated.connect(_on_charges_updated)
 
 func _connect_buttons():
 	attack_btn.pressed.connect(_on_attack_pressed)
@@ -68,6 +78,10 @@ func _connect_buttons():
 	item_btn.pressed.connect(_on_item_pressed)
 	sword_attack_btn.pressed.connect(_on_sword_attack_pressed)
 	sword_heavy_btn.pressed.connect(_on_sword_heavy_pressed)
+	loadout_btn.pressed.connect(_on_loadout_btn_pressed)
+	for i in loadout_slot_btns.size():
+		var idx = i  # capture for closure
+		loadout_slot_btns[i].pressed.connect(func(): _on_loadout_slot_pressed(idx))
 
 func _initialise_ui():
 	boss_name_label.text = "THE WARDEN"
@@ -122,6 +136,12 @@ func _on_combat_ended(player_won):
 	else:
 		telegraph_label.text = "Your run ends here."
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
+
+func _on_charges_updated(charges: int, _max_charges: int):
+	sword_attack_btn.text = "SWORD ATK [%d]" % charges
+	sword_heavy_btn.text = "SWORD HVY [%d]" % charges
+	sword_attack_btn.disabled = charges <= 0
+	sword_heavy_btn.disabled = charges <= 0
 
 func _on_loadout_swapped(new_loadout):
 	active_hero = hero_sprite2   # always hero_sprite2 now
@@ -189,6 +209,31 @@ func _on_defend_pressed():
 func _on_item_pressed():
 	turn_manager.player_act(TurnManager.PlayerAction.USE_ITEM)
 
+func _on_loadout_btn_pressed():
+	if turn_manager.turn_state != TurnManager.TurnState.PLAYER_TURN:
+		return
+	loadout_panel.visible = true
+	_set_buttons_active(false)
+	_refresh_loadout_panel()
+	
+func _on_loadout_panel_cancel_pressed():
+	loadout_panel.visible = false
+	_set_buttons_active(true)
+
+func _refresh_loadout_panel():
+	var all_loadouts = [GameManager.active_loadout] + GameManager.backup_loadouts
+	for i in loadout_slot_btns.size():
+		var ld = all_loadouts[i]
+		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nCharges: %d" % [
+			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_charges
+		]
+		loadout_slot_btns[i].disabled = (ld == GameManager.active_loadout)
+
+func _on_loadout_slot_pressed(index: int):
+	loadout_panel.visible = false
+	_set_buttons_active(true)
+	turn_manager.player_swap_loadout(index)
+
 # ─── HELPERS ──────────────────────────────────────────────
 func _set_buttons_active(active):
 	attack_btn.disabled = not active
@@ -197,6 +242,7 @@ func _set_buttons_active(active):
 	item_btn.disabled = not active
 	sword_attack_btn.disabled = not active
 	sword_heavy_btn.disabled = not active
+	loadout_btn.disabled = not active
 
 func _apply_ui_style():
 	boss_hp_bar.self_modulate = Color(1.0, 0.92, 0.92)

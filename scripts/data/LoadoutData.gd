@@ -91,3 +91,20 @@ func get_heavy_animation() -> String:
 		
 func is_sword_loadout() -> bool:
 	return weapon_type != WeaponType.DEFAULT
+	
+# ─── SWORD CHARGES ────────────────────────────────────────
+var sword_charges: int = 6
+var sword_max_charges: int = 6
+
+func use_sword_charge() -> bool:
+	if sword_charges <= 0:
+		return false
+	sword_charges -= 1
+	return true
+
+func has_sword_charges() -> bool:
+	return sword_charges > 0
+	
+# ─── HP ───────────────────────────────────────────────────
+var current_hp: int = 100
+var max_hp: int = 100
