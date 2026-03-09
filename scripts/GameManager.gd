@@ -28,6 +28,7 @@ func _ready():
 
 func _initialise_loadouts():
 	# Active loadout — Excalibur
+	
 	active_loadout = LoadoutData.new()
 	active_loadout.weapon_name = "EXCALIBUR"
 	active_loadout.weapon_damage = 45
@@ -35,6 +36,7 @@ func _initialise_loadouts():
 	active_loadout.armor_defense = 8
 	active_loadout.consumables = ["Ember Flask", "Whetstone"]
 	active_loadout.weapon_type = LoadoutData.WeaponType.EXCALIBUR  # ← add this
+	
 
 	# Backup slot 1 — Durandal
 	var backup1 = LoadoutData.new()
@@ -55,6 +57,10 @@ func _initialise_loadouts():
 	backup2.consumables = []
 	backup2.weapon_type = LoadoutData.WeaponType.SUNSWORD           # ← add this
 	backup_loadouts.append(backup2)
+	
+	active_loadout.sword_icon = preload("res://assets/art/weapons/excalibur_icon.png")
+	backup1.sword_icon = preload("res://assets/art/weapons/durandal_icon.png")
+	backup2.sword_icon = preload("res://assets/art/weapons/sunsword_icon.png")
 
 # ─── DEATH HANDLER ────────────────────────────────────────
 # Returns true if run continues, false if run is over

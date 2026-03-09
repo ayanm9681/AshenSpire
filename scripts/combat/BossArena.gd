@@ -224,9 +224,14 @@ func _refresh_loadout_panel():
 	var all_loadouts = [GameManager.active_loadout] + GameManager.backup_loadouts
 	for i in loadout_slot_btns.size():
 		var ld = all_loadouts[i]
-		loadout_slot_btns[i].text = "%s" % ld.weapon_name
-		loadout_slot_btns[i].tooltip_text = "HP: %d/%d | Charges: %d" % [ld.current_hp, ld.max_hp, ld.sword_charges]
+		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nCharges: %d" % [
+			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_charges
+		]
 		loadout_slot_btns[i].disabled = (ld == GameManager.active_loadout)
+		# Update icon
+		var icon = loadout_slot_btns[i].get_node("TextureRect")
+		if ld.sword_icon:
+			icon.texture = ld.sword_icon
 
 func _on_loadout_slot_pressed(index: int):
 	loadout_panel.visible = false

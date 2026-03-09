@@ -15,6 +15,8 @@ var armor_name: String = ""
 var armor_defense: int = 0
 var armor_durability: int = 100
 
+var sword_icon: Texture2D = null
+
 enum WeaponType {
 	DEFAULT,
 	EXCALIBUR,

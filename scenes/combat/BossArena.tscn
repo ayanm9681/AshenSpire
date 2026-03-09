@@ -29,6 +29,9 @@
 [ext_resource type="Texture2D" uid="uid://tdq71krfmt46" path="res://assets/art/Martial Hero 2/Martial Hero 2/Sprites/Take hit.png" id="24_vvlg1"]
 [ext_resource type="Texture2D" uid="uid://dphgctrq2cucv" path="res://assets/art/Martial Hero 2/Martial Hero 2/Sprites/Run.png" id="24_y6s4g"]
 [ext_resource type="Texture2D" uid="uid://nnywrqws1b4y" path="res://assets/art/Martial Hero 2/Martial Hero 2/Sprites/Fall.png" id="25_ftlfx"]
+[ext_resource type="Texture2D" uid="uid://baa6yjfu3e31l" path="res://assets/art/weapons/excalibur_icon.png" id="30_id1in"]
+[ext_resource type="Texture2D" uid="uid://bwovi32i5jrm0" path="res://assets/art/weapons/durandal_icon.png" id="31_4po5o"]
+[ext_resource type="Texture2D" uid="uid://blylknsdpbnfk" path="res://assets/art/weapons/sunsword_icon.png" id="32_flwco"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_el7cq"]
 atlas = ExtResource("4_qjwkp")
@@ -1234,9 +1237,9 @@ frame_progress = 1.0
 
 [node name="PlayerContainer" type="VBoxContainer" parent="." unique_id=983474477]
 offset_left = 78.0
-offset_top = 898.0
+offset_top = 864.0
 offset_right = 638.0
-offset_bottom = 1151.0
+offset_bottom = 1117.0
 alignment = 1
 
 [node name="PlayerHealthBar" type="ProgressBar" parent="PlayerContainer" unique_id=1968662053]
@@ -1250,7 +1253,7 @@ text = "PLAYER"
 horizontal_alignment = 1
 
 [node name="HeroSprite2" type="AnimatedSprite2D" parent="PlayerContainer" unique_id=402098460]
-position = Vector2(525.99994, -319)
+position = Vector2(527, -286)
 scale = Vector2(-2.5732474, 2.5422647)
 sprite_frames = SubResource("SpriteFrames_bkwek")
 animation = &"idle"
@@ -1263,10 +1266,10 @@ offset_bottom = 884.0
 bbcode_enabled = true
 
 [node name="TelegraphBox" type="PanelContainer" parent="." unique_id=177549901]
-offset_left = 152.0
-offset_top = 924.0
-offset_right = 712.0
-offset_bottom = 1004.0
+offset_left = 43.0
+offset_top = 899.00006
+offset_right = 603.0
+offset_bottom = 979.00006
 scale = Vector2(0.6647501, 0.8052853)
 
 [node name="TelegraphLabel" type="Label" parent="TelegraphBox" unique_id=916518239]
@@ -1317,39 +1320,57 @@ text = "USE ITEM"
 script = ExtResource("2_duxwo")
 
 [node name="LoadoutButton" type="Button" parent="." unique_id=1282546988]
-offset_left = 744.0
-offset_top = 930.0
-offset_right = 944.0
-offset_bottom = 994.0
+offset_left = 451.0
+offset_top = 894.0
+offset_right = 651.0
+offset_bottom = 958.0
 text = "LOADOUT"
 
 [node name="LoadoutPanel" type="Panel" parent="." unique_id=1259115528]
 visible = false
-offset_left = 744.0
-offset_top = 704.0
-offset_right = 1068.0
-offset_bottom = 916.0
+offset_left = 42.0
+offset_top = 485.0
+offset_right = 678.0
+offset_bottom = 697.0
 
 [node name="Slot0Button" type="Button" parent="LoadoutPanel" unique_id=233404298]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 12.0
-offset_right = 312.0
-offset_bottom = 70.0
+offset_right = 103.0
+offset_bottom = 97.0
 text = "Loadout 1"
+
+[node name="TextureRect" type="TextureRect" parent="LoadoutPanel/Slot0Button" unique_id=893027798]
+layout_mode = 0
+offset_right = 91.0
+offset_bottom = 83.0
+texture = ExtResource("30_id1in")
 
 [node name="Slot1Button" type="Button" parent="LoadoutPanel" unique_id=534976619]
 layout_mode = 0
-offset_left = 12.0
-offset_top = 76.0
-offset_right = 312.0
-offset_bottom = 134.0
+offset_left = 114.0
+offset_top = 13.0
+offset_right = 204.0
+offset_bottom = 99.0
 text = "Loadout 2"
+
+[node name="TextureRect" type="TextureRect" parent="LoadoutPanel/Slot1Button" unique_id=726579789]
+layout_mode = 0
+offset_right = 88.0
+offset_bottom = 86.0
+texture = ExtResource("31_4po5o")
 
 [node name="Slot2Button" type="Button" parent="LoadoutPanel" unique_id=420884402]
 layout_mode = 0
-offset_left = 12.0
-offset_top = 140.0
-offset_right = 312.0
-offset_bottom = 198.0
+offset_left = 217.0
+offset_top = 14.0
+offset_right = 303.0
+offset_bottom = 99.0
 text = "Loadout 3"
+
+[node name="TextureRect" type="TextureRect" parent="LoadoutPanel/Slot2Button" unique_id=553109200]
+layout_mode = 0
+offset_right = 85.0
+offset_bottom = 84.0
+texture = ExtResource("32_flwco")
