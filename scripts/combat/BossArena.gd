@@ -18,7 +18,7 @@ extends Node2D
 @onready var hero_sprite2 = $PlayerContainer/HeroSprite2    # sword hero
 @onready var sword_attack_btn = $ActionMenu/SwordAttackButton
 @onready var sword_heavy_btn = $ActionMenu/SwordHeavyButton
-@onready var loadout_btn = $ActionMenu/LoadoutButton
+@onready var loadout_btn = $LoadoutButton
 @onready var charges_label = $ActionMenu/SwordAttackButton/ChargesLabel
 @onready var loadout_panel = $LoadoutPanel
 @onready var loadout_slot_btns = [
@@ -224,9 +224,8 @@ func _refresh_loadout_panel():
 	var all_loadouts = [GameManager.active_loadout] + GameManager.backup_loadouts
 	for i in loadout_slot_btns.size():
 		var ld = all_loadouts[i]
-		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nCharges: %d" % [
-			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_charges
-		]
+		loadout_slot_btns[i].text = "%s" % ld.weapon_name
+		loadout_slot_btns[i].tooltip_text = "HP: %d/%d | Charges: %d" % [ld.current_hp, ld.max_hp, ld.sword_charges]
 		loadout_slot_btns[i].disabled = (ld == GameManager.active_loadout)
 
 func _on_loadout_slot_pressed(index: int):
@@ -263,6 +262,19 @@ func _apply_ui_style():
 	_apply_button_style(sword_heavy_btn, Color(0.12, 0.72, 0.55), Color(0.08, 0.45, 0.32))
 	_apply_button_style(defend_btn, Color(0.15, 0.47, 0.88), Color(0.09, 0.31, 0.67))
 	_apply_button_style(item_btn, Color(0.94, 0.64, 0.16), Color(0.88, 0.42, 0.08))
+	_apply_button_style(loadout_btn, Color(0.52, 0.32, 0.88), Color(0.3, 0.2, 0.6))
+	_apply_loadout_panel_style()
+
+
+func _apply_loadout_panel_style():
+	loadout_panel.add_theme_stylebox_override("panel", _make_button_style(Color(0.08, 0.1, 0.16, 0.95), Color(0.28, 0.37, 0.55), 12, 2))
+	var slot_colors = [
+		[Color(0.66, 0.29, 0.29), Color(0.42, 0.14, 0.14)],
+		[Color(0.28, 0.54, 0.8), Color(0.14, 0.3, 0.48)],
+		[Color(0.24, 0.64, 0.44), Color(0.12, 0.42, 0.26)]
+	]
+	for i in loadout_slot_btns.size():
+		_apply_button_style(loadout_slot_btns[i], slot_colors[i][0], slot_colors[i][1])
 
 func _make_bar_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()

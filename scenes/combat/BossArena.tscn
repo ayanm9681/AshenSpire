@@ -1313,40 +1313,43 @@ custom_minimum_size = Vector2(300, 70)
 layout_mode = 2
 text = "USE ITEM"
 
-[node name="LoadoutButton" type="Button" parent="ActionMenu" unique_id=1282546988]
-layout_mode = 2
-text = "Loadout"
-
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
 script = ExtResource("2_duxwo")
 
+[node name="LoadoutButton" type="Button" parent="." unique_id=1282546988]
+offset_left = 744.0
+offset_top = 930.0
+offset_right = 944.0
+offset_bottom = 994.0
+text = "LOADOUT"
+
 [node name="LoadoutPanel" type="Panel" parent="." unique_id=1259115528]
-offset_left = 58.0
-offset_top = 207.0
-offset_right = 98.0
-offset_bottom = 247.0
-scale = Vector2(15.127248, 2.0005465)
+visible = false
+offset_left = 744.0
+offset_top = 704.0
+offset_right = 1068.0
+offset_bottom = 916.0
 
 [node name="Slot0Button" type="Button" parent="LoadoutPanel" unique_id=233404298]
 layout_mode = 0
-offset_left = 2.3798108
-offset_top = 2.4993134
-offset_right = 10.999531
-offset_bottom = 12.190821
-scale = Vector2(1.5261598, 3.8167326)
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 312.0
+offset_bottom = 70.0
+text = "Loadout 1"
 
 [node name="Slot1Button" type="Button" parent="LoadoutPanel" unique_id=534976619]
 layout_mode = 0
-offset_left = 15.865414
-offset_top = 1.4995902
-offset_right = 23.865414
-offset_bottom = 12.559219
-scale = Vector2(1.5048184, 3.3897839)
+offset_left = 12.0
+offset_top = 76.0
+offset_right = 312.0
+offset_bottom = 134.0
+text = "Loadout 2"
 
 [node name="Slot2Button" type="Button" parent="LoadoutPanel" unique_id=420884402]
 layout_mode = 0
-offset_left = 28.954374
-offset_top = 1.9994535
-offset_right = 36.954376
-offset_bottom = 9.999454
-scale = Vector2(1.369807, 4.4939194)
+offset_left = 12.0
+offset_top = 140.0
+offset_right = 312.0
+offset_bottom = 198.0
+text = "Loadout 3"
