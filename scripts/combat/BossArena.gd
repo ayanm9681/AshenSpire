@@ -95,6 +95,8 @@ func _initialise_ui():
 
 # ─── SIGNAL HANDLERS ──────────────────────────────────────
 var _boss_animating: bool = false
+var _boss_dead_anim_played: bool = false
+var _hero_dead_anim_played: bool = false
 
 func _on_boss_attack_started():
 	_boss_animating= true
@@ -107,13 +109,19 @@ func _on_hp_changed(entity, new_hp):
 		await _screen_shake(18.0, 0.2)
 		await hit_pause(0.07)
 		await flash_sprite(boss_sprite)
-		await play_boss_hurt()     # ← await it
+		if new_hp <= 0:
+			await _play_death_animation(boss_sprite, true)
+		else:
+			await play_boss_hurt()
 	elif entity == "player":
 		player_hp_bar.value = new_hp
 		await _screen_shake(14.0, 0.18)
 		await hit_pause(0.05)
 		await flash_sprite(active_hero)
-		await play_hero_hurt()     # ← await it
+		if new_hp <= 0:
+			await _play_death_animation(active_hero, false)
+		else:
+			await play_hero_hurt()
 
 func _on_log_updated(message):
 	combat_log.append_text("\n" + message)
@@ -133,9 +141,11 @@ func _on_combat_ended(player_won):
 	if player_won:
 		telegraph_label.text = "Victory. The Warden falls."
 		combat_log.append_text("\n\n— YOUR RUN CONTINUES —")
+		await _play_death_animation(boss_sprite, true)
 	else:
 		telegraph_label.text = "Your run ends here."
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
+		await _play_death_animation(active_hero, false)
 
 func _on_charges_updated(charges: int, _max_charges: int):
 	sword_attack_btn.text = "SWORD ATK [%d]" % charges
@@ -302,10 +312,10 @@ func _apply_button_style(button: Button, primary: Color, accent: Color):
 	button.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
 	button.add_theme_color_override("font_disabled_color", Color(0.7, 0.7, 0.7, 0.8))
 
-	button.add_theme_stylebox_override("normal", _make_button_style(primary, accent, 10, 2))
-	button.add_theme_stylebox_override("hover", _make_button_style(primary.lightened(0.2), accent.lightened(0.15), 10, 2))
-	button.add_theme_stylebox_override("pressed", _make_button_style(primary.darkened(0.18), accent.darkened(0.2), 10, 2))
-	button.add_theme_stylebox_override("disabled", _make_button_style(Color(0.25, 0.25, 0.25, 0.65), Color(0.12, 0.12, 0.12, 0.8), 10, 1))
+	button.add_theme_stylebox_override("normal", _make_button_style(primary, accent, 999, 2))
+	button.add_theme_stylebox_override("hover", _make_button_style(primary.lightened(0.2), accent.lightened(0.15), 999, 2))
+	button.add_theme_stylebox_override("pressed", _make_button_style(primary.darkened(0.18), accent.darkened(0.2), 999, 2))
+	button.add_theme_stylebox_override("disabled", _make_button_style(Color(0.25, 0.25, 0.25, 0.65), Color(0.12, 0.12, 0.12, 0.8), 999, 1))
 
 func _make_button_style(fill_color: Color, border_color: Color, corner_radius: int, border_size: int) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
@@ -407,6 +417,19 @@ func play_hero_hurt():
 	active_hero.play("hurt")
 	await get_tree().create_timer(0.3).timeout
 	active_hero.play("idle")
+
+func _play_death_animation(sprite: AnimatedSprite2D, is_boss: bool):
+	if is_boss and _boss_dead_anim_played:
+		return
+	if not is_boss and _hero_dead_anim_played:
+		return
+	if is_boss:
+		_boss_dead_anim_played = true
+	else:
+		_hero_dead_anim_played = true
+	if sprite.sprite_frames and sprite.sprite_frames.has_animation("death"):
+		sprite.play("death")
+		await sprite.animation_finished
 
 func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
 	var target_position = _combat_target_position(attacker, target)

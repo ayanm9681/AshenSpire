@@ -1278,42 +1278,61 @@ text = "Waiting..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ActionMenu" type="GridContainer" parent="." unique_id=1440649870]
+[node name="ActionMenu" type="Control" parent="." unique_id=1440649870]
 offset_left = 38.0
 offset_top = 1016.0
 offset_right = 678.0
 offset_bottom = 1246.0
 scale = Vector2(1.0153196, 1)
-columns = 2
 
 [node name="AttackButton" type="Button" parent="ActionMenu" unique_id=334043537]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 0
+offset_right = 140.0
+offset_bottom = 140.0
 text = "ATTACK"
 
 [node name="HeavyAttackButton" type="Button" parent="ActionMenu" unique_id=1782702121]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 0
+offset_left = -10.0
+offset_top = 86.0
+offset_right = 150.0
+offset_bottom = 246.0
 text = "HEAVY"
 
 [node name="SwordAttackButton" type="Button" parent="ActionMenu" unique_id=227692099]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 0
+offset_left = 228.0
+offset_right = 368.0
+offset_bottom = 140.0
 text = "SP ATTACK"
 
 [node name="SwordHeavyButton" type="Button" parent="ActionMenu" unique_id=1200524722]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 0
+offset_left = 218.0
+offset_top = 86.0
+offset_right = 378.0
+offset_bottom = 246.0
 text = "SP HEAVY"
 
 [node name="DefendButton" type="Button" parent="ActionMenu" unique_id=386664342]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 0
+offset_left = 456.0
+offset_right = 596.0
+offset_bottom = 140.0
 text = "DEFEND"
 
 [node name="ItemButton" type="Button" parent="ActionMenu" unique_id=500231851]
-custom_minimum_size = Vector2(300, 70)
-layout_mode = 2
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 0
+offset_left = 446.0
+offset_top = 86.0
+offset_right = 606.0
+offset_bottom = 246.0
 text = "USE ITEM"
 
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
