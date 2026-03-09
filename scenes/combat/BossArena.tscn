@@ -1315,6 +1315,7 @@ text = "USE ITEM"
 
 [node name="LoadoutButton" type="Button" parent="ActionMenu" unique_id=1282546988]
 layout_mode = 2
+text = "Loadout"
 
 [node name="TurnManager" type="Node" parent="." unique_id=141466349]
 script = ExtResource("2_duxwo")
