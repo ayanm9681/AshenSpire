@@ -236,7 +236,7 @@ func _refresh_loadout_panel():
 func _on_loadout_slot_pressed(index: int):
 	loadout_panel.visible = false
 	_set_buttons_active(true)
-	turn_manager.player_swap_loadout(index)
+	turn_manager.player_swap_loadout(index -1)
 
 # ─── HELPERS ──────────────────────────────────────────────
 func _set_buttons_active(active):

@@ -1327,7 +1327,6 @@ offset_bottom = 958.0
 text = "LOADOUT"
 
 [node name="LoadoutPanel" type="Panel" parent="." unique_id=1259115528]
-visible = false
 offset_left = 42.0
 offset_top = 485.0
 offset_right = 678.0
@@ -1349,10 +1348,10 @@ texture = ExtResource("30_id1in")
 
 [node name="Slot1Button" type="Button" parent="LoadoutPanel" unique_id=534976619]
 layout_mode = 0
-offset_left = 114.0
-offset_top = 13.0
-offset_right = 204.0
-offset_bottom = 99.0
+offset_left = 126.0
+offset_top = 14.0
+offset_right = 216.0
+offset_bottom = 100.0
 text = "Loadout 2"
 
 [node name="TextureRect" type="TextureRect" parent="LoadoutPanel/Slot1Button" unique_id=726579789]
@@ -1363,10 +1362,10 @@ texture = ExtResource("31_4po5o")
 
 [node name="Slot2Button" type="Button" parent="LoadoutPanel" unique_id=420884402]
 layout_mode = 0
-offset_left = 217.0
-offset_top = 14.0
-offset_right = 303.0
-offset_bottom = 99.0
+offset_left = 245.0
+offset_top = 15.0
+offset_right = 331.0
+offset_bottom = 100.0
 text = "Loadout 3"
 
 [node name="TextureRect" type="TextureRect" parent="LoadoutPanel/Slot2Button" unique_id=553109200]

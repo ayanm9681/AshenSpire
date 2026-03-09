@@ -24,7 +24,8 @@ var echo_snapshot: Dictionary = {}
 
 # ─── READY ────────────────────────────────────────────────
 func _ready():
-	_initialise_loadouts()
+	if active_loadout == null:
+		_initialise_loadouts()
 
 func _initialise_loadouts():
 	# Active loadout — Excalibur
@@ -67,10 +68,12 @@ func _initialise_loadouts():
 func on_player_death() -> bool:
 	if backup_loadouts.is_empty():
 		return false
-
-	# Swap to next backup
-	active_loadout = backup_loadouts.pop_front()
-	player_hp = player_max_hp
+	# Proper swap — put dead loadout into backup, take first backup as active
+	var previous_active = active_loadout
+	active_loadout = backup_loadouts[0]
+	backup_loadouts[0] = previous_active
+	# Reset the dead loadout's HP for next time
+	backup_loadouts[0].current_hp = backup_loadouts[0].max_hp
 	echo_threshold_met = false
 	echo_snapshot = {}
 	return true
