@@ -71,6 +71,7 @@ func _connect_signals():
 	turn_manager.combat_ended.connect(_on_combat_ended)
 	turn_manager.loadout_swapped.connect(_on_loadout_swapped)
 	turn_manager.charges_updated.connect(_on_charges_updated)
+	turn_manager.damage_taken.connect(_on_damage_taken)
 
 func _connect_buttons():
 	attack_btn.pressed.connect(_on_attack_pressed)
@@ -127,6 +128,11 @@ func _on_hp_changed(entity, new_hp):
 			await _play_death_animation(active_hero, false)
 		else:
 			await play_hero_hurt()
+
+
+func _on_damage_taken(entity: String, amount: int, is_crit: bool):
+	var target_sprite: AnimatedSprite2D = boss_sprite if entity == "boss" else active_hero
+	_show_floating_damage(target_sprite, amount, is_crit)
 
 func _on_log_updated(message):
 	combat_log.append_text("\n" + message)
@@ -485,3 +491,25 @@ func _run_to_position(sprite: AnimatedSprite2D, destination: Vector2):
 	var tween = create_tween()
 	tween.tween_property(sprite, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _show_floating_damage(target_sprite: AnimatedSprite2D, amount: int, is_crit: bool):
+	var damage_label := Label.new()
+	damage_label.text = str(amount)
+	damage_label.z_index = 200
+	damage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	damage_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	damage_label.add_theme_font_size_override("font_size", 42 if is_crit else 30)
+	damage_label.add_theme_constant_override("outline_size", 8 if is_crit else 5)
+	damage_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+	damage_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.35) if is_crit else Color(1.0, 0.45, 0.45))
+	if is_crit:
+		damage_label.text = "CRIT %d" % amount
+	add_child(damage_label)
+	damage_label.global_position = target_sprite.global_position + Vector2(-55, -145)
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(damage_label, "global_position:y", damage_label.global_position.y - 85.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(damage_label, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	await tween.finished
+	damage_label.queue_free()

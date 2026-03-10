@@ -15,6 +15,7 @@ signal boss_turn_started()
 signal combat_ended(player_won: bool)
 signal loadout_swapped(new_loadout)
 signal charges_updated(charges: int, max_charges: int)
+signal damage_taken(entity: String, amount: int, is_crit: bool)
 
 # ==============================
 # ENUMS
@@ -48,6 +49,9 @@ var sword_player_damage: int = 0
 var player_defense: int = 0
 var player_is_defending: bool = false
 
+const HERO_BASE_CRIT_CHANCE: float = 0.10
+const HERO_BASE_CRIT_MULTIPLIER: float = 1.5
+
 # ==============================
 # BOSS STATS
 # ==============================
@@ -59,6 +63,10 @@ var boss_defense: int = 5
 
 var boss_next_move: String = ""
 var last_boss_move: String = ""
+
+const BOSS_CRIT_CHANCE: float = 0.20
+const BOSS_STRIKE_CRIT_MULTIPLIER: float = 2.1
+const BOSS_HEAVY_CRIT_MULTIPLIER: float = 2.2
 
 # ==============================
 # ECHO TRACKING (unchanged)
@@ -159,13 +167,20 @@ func _player_attack() -> void:
 	var damage: int = base if base > 0 else 1
 
 	damage += 2  # small balance adjustment
+	var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+	if crit_roll["is_crit"]:
+		damage = int(round(float(damage) * crit_roll["multiplier"]))
 
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
 
-	emit_signal("combat_log_updated", "You dealt %d damage." % damage)
+	if crit_roll["is_crit"]:
+		emit_signal("combat_log_updated", "CRIT! You dealt %d damage." % damage)
+	else:
+		emit_signal("combat_log_updated", "You dealt %d damage." % damage)
+	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
@@ -173,13 +188,20 @@ func _player_attack() -> void:
 func _player_heavy_attack() -> void:
 	var base: int = default_player_damage - boss_defense
 	var damage: int = int(max(base, 1) * GameManager.default_heavy_multiplier)
+	var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+	if crit_roll["is_crit"]:
+		damage = int(round(float(damage) * crit_roll["multiplier"]))
 
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
 
-	emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage." % damage)
+	if crit_roll["is_crit"]:
+		emit_signal("combat_log_updated", "CRIT! HEAVY strike for %d damage." % damage)
+	else:
+		emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage." % damage)
+	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
@@ -193,11 +215,19 @@ func _player_sword_attack() -> void:
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
 	damage += 2
+	var sword_crit := _hero_sword_crit_values()
+	var crit_roll := _roll_critical(sword_crit["chance"], sword_crit["multiplier"])
+	if crit_roll["is_crit"]:
+		damage = int(round(float(damage) * crit_roll["multiplier"]))
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-	emit_signal("combat_log_updated", "Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	if crit_roll["is_crit"]:
+		emit_signal("combat_log_updated", "CRIT! Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	else:
+		emit_signal("combat_log_updated", "Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
 	_check_echo_threshold()
@@ -211,11 +241,19 @@ func _player_sword_heavy_attack() -> void:
 	sword_player_damage = GameManager.active_loadout.effective_damage()
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = int(max(base, 1) * 1.8)
+	var sword_crit := _hero_sword_crit_values()
+	var crit_roll := _roll_critical(sword_crit["chance"], sword_crit["multiplier"])
+	if crit_roll["is_crit"]:
+		damage = int(round(float(damage) * crit_roll["multiplier"]))
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-	emit_signal("combat_log_updated", "SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	if crit_roll["is_crit"]:
+		emit_signal("combat_log_updated", "CRIT! SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	else:
+		emit_signal("combat_log_updated", "SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_charges])
+	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
 	_check_echo_threshold()
@@ -241,15 +279,24 @@ func _player_use_item() -> void:
 
 func _boss_act() -> void:
 	var raw_damage: int = boss_damage
+	var was_critical := false
 
 	match boss_next_move:
 		"STRIKE":
 			raw_damage = boss_damage
-			emit_signal("combat_log_updated", "Warden uses STRIKE!")
+			var strike_crit := _roll_critical(BOSS_CRIT_CHANCE, BOSS_STRIKE_CRIT_MULTIPLIER)
+			if strike_crit["is_crit"]:
+				raw_damage = int(round(float(raw_damage) * strike_crit["multiplier"]))
+				was_critical = true
+			emit_signal("combat_log_updated", "Warden uses STRIKE%s" % (" — CRIT!" if was_critical else "!"))
 
 		"HEAVY":
 			raw_damage = int(boss_damage * 1.8)
-			emit_signal("combat_log_updated", "Warden unleashes HEAVY attack!")
+			var heavy_crit := _roll_critical(BOSS_CRIT_CHANCE, BOSS_HEAVY_CRIT_MULTIPLIER)
+			if heavy_crit["is_crit"]:
+				raw_damage = int(round(float(raw_damage) * heavy_crit["multiplier"]))
+				was_critical = true
+			emit_signal("combat_log_updated", "Warden unleashes HEAVY attack%s" % (" — CRIT!" if was_critical else "!"))
 
 		"ENDURE":
 			var heal: int = 20
@@ -273,6 +320,7 @@ func _boss_act() -> void:
 	GameManager.player_hp = player_hp
 	GameManager.active_loadout.current_hp = player_hp
 	emit_signal("combat_log_updated", "You took %d damage." % final_damage)
+	emit_signal("damage_taken", "player", final_damage, was_critical)
 	emit_signal("hp_changed", "player", player_hp)
 	
 	if player_hp <= 0:
@@ -374,3 +422,27 @@ func _handle_player_death() -> void:
 		turn_state = TurnState.ENDED
 		emit_signal("combat_log_updated", "You were defeated.")
 		emit_signal("combat_ended", false)
+
+func _hero_sword_crit_values() -> Dictionary:
+	var crit_chance := HERO_BASE_CRIT_CHANCE
+	var crit_multiplier := HERO_BASE_CRIT_MULTIPLIER
+	match GameManager.active_loadout.weapon_type:
+		LoadoutData.WeaponType.EXCALIBUR:
+			crit_chance += 0.15
+			crit_multiplier += 0.75
+		LoadoutData.WeaponType.DURANDAL:
+			crit_chance += 0.12
+			crit_multiplier += 0.75
+		LoadoutData.WeaponType.SUNSWORD:
+			crit_chance += 0.10
+			crit_multiplier += 0.85
+	return {
+		"chance": crit_chance,
+		"multiplier": crit_multiplier
+	}
+
+func _roll_critical(chance: float, multiplier: float) -> Dictionary:
+	return {
+		"is_crit": randf() <= chance,
+		"multiplier": multiplier
+	}
