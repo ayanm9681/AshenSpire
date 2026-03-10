@@ -56,6 +56,12 @@ func _ready():
 	_boss_start_position = boss_sprite.global_position
 	_arena_base_position = global_position
 	_start_idle_animations()
+	_on_charges_updated(
+		GameManager.active_loadout.sword_attack_charges,
+		GameManager.active_loadout.sword_attack_max_charges,
+		GameManager.active_loadout.sword_heavy_charges,
+		GameManager.active_loadout.sword_heavy_max_charges
+	)
 
 func _start_idle_animations():
 	boss_sprite.play("idle")
@@ -158,11 +164,11 @@ func _on_combat_ended(player_won):
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
 		await _play_death_animation(active_hero, false)
 
-func _on_charges_updated(charges: int, _max_charges: int):
-	sword_attack_btn.text = "SWORD ATK [%d]" % charges
-	sword_heavy_btn.text = "SWORD HVY [%d]" % charges
-	sword_attack_btn.disabled = charges <= 0
-	sword_heavy_btn.disabled = charges <= 0
+func _on_charges_updated(attack_charges: int, _attack_max_charges: int, heavy_charges: int, _heavy_max_charges: int):
+	sword_attack_btn.text = "SWORD ATK [%d]" % attack_charges
+	sword_heavy_btn.text = "SWORD HVY [%d]" % heavy_charges
+	sword_attack_btn.disabled = (attack_charges <= 0) or (not turn_manager.can_use_sword_attack_action())
+	sword_heavy_btn.disabled = (heavy_charges <= 0) or (not turn_manager.can_use_sword_heavy_action())
 	# Recalculate pivot after text/size change
 	await get_tree().process_frame   # wait one frame for layout to update
 	sword_attack_btn.pivot_offset = sword_attack_btn.size / 2.0
@@ -180,7 +186,12 @@ func _on_loadout_swapped(new_loadout):
 	active_hero.play("idle")
 	
 	# Immediately refresh charge display
-	_on_charges_updated(new_loadout.sword_charges, new_loadout.sword_max_charges)
+	_on_charges_updated(
+		new_loadout.sword_attack_charges,
+		new_loadout.sword_attack_max_charges,
+		new_loadout.sword_heavy_charges,
+		new_loadout.sword_heavy_max_charges
+	)
 
 	combat_log.append_text(
 		"\nEquipping: %s (DMG: %d)" % [
@@ -258,8 +269,8 @@ func _refresh_loadout_panel():
 		var ld = all_loadouts[i]
 		var is_active = (ld == GameManager.active_loadout)
 		var is_dead = (ld.current_hp <= 0)
-		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nCharges: %d" % [
-			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_charges
+		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nATK/HVY Charges: %d/%d" % [
+			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_attack_charges, ld.sword_heavy_charges
 		]
 		loadout_slot_btns[i].disabled = is_active or is_dead  # ← disable dead ones too
 		var icon = loadout_slot_btns[i].get_node("TextureRect")
@@ -277,8 +288,8 @@ func _set_buttons_active(active):
 	heavy_attack_btn.disabled = not active
 	defend_btn.disabled = not active
 	item_btn.disabled = not active
-	sword_attack_btn.disabled = not active
-	sword_heavy_btn.disabled = not active
+	sword_attack_btn.disabled = (not active) or (not turn_manager.can_use_sword_attack_action())
+	sword_heavy_btn.disabled = (not active) or (not turn_manager.can_use_sword_heavy_action())
 	loadout_btn.disabled = not active
 
 func _apply_ui_style():

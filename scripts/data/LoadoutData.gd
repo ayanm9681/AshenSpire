@@ -95,17 +95,38 @@ func is_sword_loadout() -> bool:
 	return weapon_type != WeaponType.DEFAULT
 	
 # ─── SWORD CHARGES ────────────────────────────────────────
-var sword_charges: int = 6
-var sword_max_charges: int = 6
+var sword_attack_charges: int = 6
+var sword_attack_max_charges: int = 6
+var sword_heavy_charges: int = 6
+var sword_heavy_max_charges: int = 6
 
-func use_sword_charge() -> bool:
-	if sword_charges <= 0:
+func use_sword_attack_charge() -> bool:
+	if sword_attack_charges <= 0:
 		return false
-	sword_charges -= 1
+	sword_attack_charges -= 1
 	return true
 
-func has_sword_charges() -> bool:
-	return sword_charges > 0
+func use_sword_heavy_charge() -> bool:
+	if sword_heavy_charges <= 0:
+		return false
+	sword_heavy_charges -= 1
+	return true
+
+func refund_sword_attack_charge(amount: int = 1) -> void:
+	sword_attack_charges = min(sword_attack_max_charges, sword_attack_charges + amount)
+
+func refund_sword_heavy_charge(amount: int = 1) -> void:
+	sword_heavy_charges = min(sword_heavy_max_charges, sword_heavy_charges + amount)
+
+func has_sword_attack_charges() -> bool:
+	return sword_attack_charges > 0
+
+func has_sword_heavy_charges() -> bool:
+	return sword_heavy_charges > 0
+
+# ─── DEFAULT COMBO TRACKING (FOR SWORD UNLOCKS) ───────────
+var default_combo_count: int = 0
+var default_heavy_combo_count: int = 0
 	
 # ─── HP ───────────────────────────────────────────────────
 var current_hp: int = 100
