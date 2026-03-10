@@ -16,6 +16,7 @@ signal combat_ended(player_won: bool)
 signal loadout_swapped(new_loadout)
 signal charges_updated(attack_charges: int, attack_max_charges: int, heavy_charges: int, heavy_max_charges: int)
 signal damage_taken(entity: String, amount: int, is_crit: bool)
+signal combo_updated(combo_type: String, combo_count: int)
 
 # ==============================
 # ENUMS
@@ -167,51 +168,68 @@ func player_swap_loadout(loadout_index: int) -> void:
 		_boss_act()
 
 func _player_attack() -> void:
-	var base: int = default_player_damage - boss_defense
-	var damage: int = base if base > 0 else 1
+	var combo_before: int = GameManager.active_loadout.default_combo_count
+	var hit_count: int = min(combo_before + 1, MAX_COMBO_COUNT)
+	var total_damage: int = 0
+	var had_crit: bool = false
 
-	damage += 2  # small balance adjustment
-	var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
-	if crit_roll["is_crit"]:
-		damage = int(round(float(damage) * crit_roll["multiplier"]))
+	for i in hit_count:
+		var base: int = default_player_damage - boss_defense
+		var hit_damage: int = base if base > 0 else 1
+		hit_damage += 2  # small balance adjustment
+		var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+		if crit_roll["is_crit"]:
+			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
+			had_crit = true
+		total_damage += hit_damage
 
-	boss_hp -= damage
+	boss_hp -= total_damage
 	boss_hp = max(0, boss_hp)
-	threshold_damage_dealt += damage
+	threshold_damage_dealt += total_damage
 	threshold_turns += 1
 
-	if crit_roll["is_crit"]:
-		emit_signal("combat_log_updated", "CRIT! You dealt %d damage." % damage)
+	if had_crit:
+		emit_signal("combat_log_updated", "CRIT! You dealt %d damage over %d hit(s)." % [total_damage, hit_count])
 	else:
-		emit_signal("combat_log_updated", "You dealt %d damage." % damage)
-	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
+		emit_signal("combat_log_updated", "You dealt %d damage over %d hit(s)." % [total_damage, hit_count])
+	emit_signal("damage_taken", "boss", total_damage, had_crit)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
 	GameManager.active_loadout.default_combo_count = min(MAX_COMBO_COUNT, GameManager.active_loadout.default_combo_count + 1)
+	emit_signal("combo_updated", "normal", GameManager.active_loadout.default_combo_count)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 
 func _player_heavy_attack() -> void:
-	var base: int = default_player_damage - boss_defense
-	var damage: int = int(max(base, 1) * GameManager.default_heavy_multiplier)
-	var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
-	if crit_roll["is_crit"]:
-		damage = int(round(float(damage) * crit_roll["multiplier"]))
+	var combo_before: int = GameManager.active_loadout.default_heavy_combo_count
+	var hit_count: int = min(combo_before + 1, MAX_COMBO_COUNT)
+	var total_damage: int = 0
+	var had_crit: bool = false
 
-	boss_hp -= damage
+	for i in hit_count:
+		var base: int = default_player_damage - boss_defense
+		var hit_damage: int = int(max(base, 1) * GameManager.default_heavy_multiplier)
+		var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+		if crit_roll["is_crit"]:
+			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
+			had_crit = true
+		total_damage += hit_damage
+
+	boss_hp -= total_damage
 	boss_hp = max(0, boss_hp)
-	threshold_damage_dealt += damage
+	threshold_damage_dealt += total_damage
 	threshold_turns += 1
 
-	if crit_roll["is_crit"]:
-		emit_signal("combat_log_updated", "CRIT! HEAVY strike for %d damage." % damage)
+	if had_crit:
+		emit_signal("combat_log_updated", "CRIT! HEAVY strike for %d damage over %d hit(s)." % [total_damage, hit_count])
 	else:
-		emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage." % damage)
-	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
+		emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage over %d hit(s)." % [total_damage, hit_count])
+	emit_signal("damage_taken", "boss", total_damage, had_crit)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
 	GameManager.active_loadout.default_heavy_combo_count = min(MAX_COMBO_COUNT, GameManager.active_loadout.default_heavy_combo_count + 1)
+	emit_signal("combo_updated", "heavy", GameManager.active_loadout.default_heavy_combo_count)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 
 func _player_sword_attack() -> void:
@@ -271,6 +289,7 @@ func _player_sword_attack() -> void:
 	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	GameManager.active_loadout.default_combo_count = 0
+	emit_signal("combo_updated", "normal", GameManager.active_loadout.default_combo_count)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 	_check_echo_threshold()
 
@@ -334,6 +353,7 @@ func _player_sword_heavy_attack() -> void:
 	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	GameManager.active_loadout.default_heavy_combo_count = 0
+	emit_signal("combo_updated", "heavy", GameManager.active_loadout.default_heavy_combo_count)
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 	_check_echo_threshold()
 
