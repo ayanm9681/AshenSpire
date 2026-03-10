@@ -165,14 +165,22 @@ func _on_combat_ended(player_won):
 		await _play_death_animation(active_hero, false)
 
 func _on_charges_updated(attack_charges: int, _attack_max_charges: int, heavy_charges: int, _heavy_max_charges: int):
-	sword_attack_btn.text = "SWORD ATK [%d]" % attack_charges
-	sword_heavy_btn.text = "SWORD HVY [%d]" % heavy_charges
-	sword_attack_btn.disabled = (attack_charges <= 0) or (not turn_manager.can_use_sword_attack_action())
-	sword_heavy_btn.disabled = (heavy_charges <= 0) or (not turn_manager.can_use_sword_heavy_action())
-	# Recalculate pivot after text/size change
-	await get_tree().process_frame   # wait one frame for layout to update
+	var atk_cost = _get_charge_cost(GameManager.active_loadout.default_combo_count)
+	var hvy_cost = _get_charge_cost(GameManager.active_loadout.default_heavy_combo_count)
+	sword_attack_btn.text = "SWORD ATK [%d] cost:%d" % [attack_charges, atk_cost]
+	sword_heavy_btn.text = "SWORD HVY [%d] cost:%d" % [heavy_charges, hvy_cost]
+	sword_attack_btn.disabled = (attack_charges < atk_cost) or (not turn_manager.can_use_sword_attack_action())
+	sword_heavy_btn.disabled = (heavy_charges < hvy_cost) or (not turn_manager.can_use_sword_heavy_action())
+	await get_tree().process_frame
 	sword_attack_btn.pivot_offset = sword_attack_btn.size / 2.0
 	sword_heavy_btn.pivot_offset = sword_heavy_btn.size / 2.0
+
+func _get_charge_cost(combo: int) -> int:
+	if combo >= TurnManager.MAX_COMBO_COUNT:
+		return 4
+	elif combo >= 2:
+		return 2
+	return 1
 
 func _on_loadout_swapped(new_loadout):
 	active_hero = hero_sprite2   # always hero_sprite2 now

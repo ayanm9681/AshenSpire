@@ -53,7 +53,8 @@ const HERO_BASE_CRIT_CHANCE: float = 0.10
 const HERO_BASE_CRIT_MULTIPLIER: float = 1.5
 const SWORD_UNLOCK_THRESHOLD: int = 2
 const MAX_COMBO_COUNT: int = 3
-const COMBO_LEVEL3_CRIT_BOOST: float = 0.5
+const COMBO_LEVEL2_CRIT_BOOST: float = 0.50
+const COMBO_LEVEL3_CRIT_BOOST: float = 0.75
 
 # ==============================
 # BOSS STATS
@@ -157,13 +158,13 @@ func player_swap_loadout(loadout_index: int) -> void:
 		emit_signal("hp_changed", "player", player_hp)
 		emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 		emit_signal("combat_log_updated", "Switched to %s!" % GameManager.active_loadout.weapon_name)
-		## Counts as your turn
-		#turn_state = TurnState.BOSS_TURN
-		#emit_signal("boss_turn_started")
-		#await get_tree().create_timer(0.35).timeout
-		#emit_signal("boss_attack_started")
-		#await get_tree().create_timer(0.85).timeout
-		#_boss_act()
+		# Counts as your turn
+		turn_state = TurnState.BOSS_TURN
+		emit_signal("boss_turn_started")
+		await get_tree().create_timer(0.35).timeout
+		emit_signal("boss_attack_started")
+		await get_tree().create_timer(0.85).timeout
+		_boss_act()
 
 func _player_attack() -> void:
 	var base: int = default_player_damage - boss_defense
@@ -188,6 +189,7 @@ func _player_attack() -> void:
 
 	_check_echo_threshold()
 	GameManager.active_loadout.default_combo_count = min(MAX_COMBO_COUNT, GameManager.active_loadout.default_combo_count + 1)
+	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 
 func _player_heavy_attack() -> void:
 	var base: int = default_player_damage - boss_defense
@@ -210,38 +212,62 @@ func _player_heavy_attack() -> void:
 
 	_check_echo_threshold()
 	GameManager.active_loadout.default_heavy_combo_count = min(MAX_COMBO_COUNT, GameManager.active_loadout.default_heavy_combo_count + 1)
+	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 
 func _player_sword_attack() -> void:
 	if not can_use_sword_attack_action():
-		emit_signal("combat_log_updated", "Sword attack locked. Build %d default attacks first." % SWORD_UNLOCK_THRESHOLD)
+		emit_signal("combat_log_updated", "Sword attack locked. Build 1 default attack first.")
 		threshold_turns += 1
 		return
-	if not GameManager.active_loadout.use_sword_attack_charge():
-		emit_signal("combat_log_updated", "No sword charges remaining!")
-		# Still costs a turn but does no damage
+
+	var combo: int = GameManager.active_loadout.default_combo_count
+
+	# Determine charge cost before spending
+	var charge_cost: int = 1
+	if combo >= MAX_COMBO_COUNT:
+		charge_cost = 4
+	elif combo >= 2:
+		charge_cost = 2
+
+	# Check if enough charges exist
+	if GameManager.active_loadout.sword_attack_charges < charge_cost:
+		emit_signal("combat_log_updated", "Not enough charges! Need %d, have %d." % [charge_cost, GameManager.active_loadout.sword_attack_charges])
 		threshold_turns += 1
 		return
-	var combo_before_attack: int = GameManager.active_loadout.default_combo_count
+
+	# Spend charges
+	for i in charge_cost:
+		GameManager.active_loadout.use_sword_attack_charge()
+
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
 	damage += 2
+
 	var sword_crit := _hero_sword_crit_values()
-	if combo_before_attack >= MAX_COMBO_COUNT:
-		sword_crit["chance"] *= (1.0 + COMBO_LEVEL3_CRIT_BOOST)
-		sword_crit["multiplier"] *= (1.0 + COMBO_LEVEL3_CRIT_BOOST)
+
+	if combo >= MAX_COMBO_COUNT:
+		sword_crit["chance"] = 1.0  # guaranteed
+		sword_crit["multiplier"] += COMBO_LEVEL3_CRIT_BOOST
+		GameManager.active_loadout.refund_sword_attack_charge(1)
+	elif combo >= 2:
+		sword_crit["chance"] += COMBO_LEVEL2_CRIT_BOOST
+		sword_crit["multiplier"] += COMBO_LEVEL2_CRIT_BOOST
+
 	var crit_roll := _roll_critical(sword_crit["chance"], sword_crit["multiplier"])
 	if crit_roll["is_crit"]:
 		damage = int(round(float(damage) * crit_roll["multiplier"]))
+
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-	if combo_before_attack >= MAX_COMBO_COUNT:
-		GameManager.active_loadout.refund_sword_attack_charge(1)
+
+	var refund_note: String = " [+1 refunded]" if combo >= MAX_COMBO_COUNT else ""
 	if crit_roll["is_crit"]:
-		emit_signal("combat_log_updated", "CRIT! Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_attack_charges])
+		emit_signal("combat_log_updated", "CRIT! Sword attack dealt %d damage. [%d charges left]%s" % [damage, GameManager.active_loadout.sword_attack_charges, refund_note])
 	else:
 		emit_signal("combat_log_updated", "Sword attack dealt %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_attack_charges])
+
 	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	GameManager.active_loadout.default_combo_count = 0
@@ -250,35 +276,61 @@ func _player_sword_attack() -> void:
 
 func _player_sword_heavy_attack() -> void:
 	if not can_use_sword_heavy_action():
-		emit_signal("combat_log_updated", "Sword heavy locked. Build %d default heavy attacks first." % SWORD_UNLOCK_THRESHOLD)
+		emit_signal("combat_log_updated", "Sword heavy locked. Build 1 default heavy attack first.")
 		threshold_turns += 1
 		return
-	if not GameManager.active_loadout.use_sword_heavy_charge():
-		emit_signal("combat_log_updated", "No sword charges remaining!")
+
+	var combo: int = GameManager.active_loadout.default_heavy_combo_count
+
+	# Determine charge cost
+	var charge_cost: int = 1
+	if combo >= MAX_COMBO_COUNT:
+		charge_cost = 4
+	elif combo >= 2:
+		charge_cost = 2
+
+	# Check if enough charges exist
+	if GameManager.active_loadout.sword_heavy_charges < charge_cost:
+		emit_signal("combat_log_updated", "Not enough charges! Need %d, have %d." % [charge_cost, GameManager.active_loadout.sword_heavy_charges])
 		threshold_turns += 1
 		return
-	var combo_before_heavy: int = GameManager.active_loadout.default_heavy_combo_count
+
+	# Spend charges
+	for i in charge_cost:
+		GameManager.active_loadout.use_sword_heavy_charge()
+
+	# Degrade weapon and recalculate damage
 	GameManager.active_loadout.degrade_weapon(5)
 	sword_player_damage = GameManager.active_loadout.effective_damage()
+
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = int(max(base, 1) * 1.8)
+
 	var sword_crit := _hero_sword_crit_values()
-	if combo_before_heavy >= MAX_COMBO_COUNT:
-		sword_crit["chance"] *= (1.0 + COMBO_LEVEL3_CRIT_BOOST)
-		sword_crit["multiplier"] *= (1.0 + COMBO_LEVEL3_CRIT_BOOST)
+
+	if combo >= MAX_COMBO_COUNT:
+		sword_crit["chance"] = 1.0  # guaranteed
+		sword_crit["multiplier"] += COMBO_LEVEL3_CRIT_BOOST
+		GameManager.active_loadout.refund_sword_heavy_charge(1)
+	elif combo >= 2:
+		sword_crit["chance"] += COMBO_LEVEL2_CRIT_BOOST
+		sword_crit["multiplier"] += COMBO_LEVEL2_CRIT_BOOST
+
 	var crit_roll := _roll_critical(sword_crit["chance"], sword_crit["multiplier"])
 	if crit_roll["is_crit"]:
 		damage = int(round(float(damage) * crit_roll["multiplier"]))
+
 	boss_hp -= damage
 	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += damage
 	threshold_turns += 1
-	if combo_before_heavy >= MAX_COMBO_COUNT:
-		GameManager.active_loadout.refund_sword_heavy_charge(1)
+
+	var refund_note: String = " [+1 refunded]" if combo >= MAX_COMBO_COUNT else ""
 	if crit_roll["is_crit"]:
-		emit_signal("combat_log_updated", "CRIT! SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_heavy_charges])
+		emit_signal("combat_log_updated", "CRIT! SWORD HEAVY for %d damage. [%d charges left]%s" % [damage, GameManager.active_loadout.sword_heavy_charges, refund_note])
 	else:
 		emit_signal("combat_log_updated", "SWORD HEAVY for %d damage. [%d charges left]" % [damage, GameManager.active_loadout.sword_heavy_charges])
+
 	emit_signal("damage_taken", "boss", damage, crit_roll["is_crit"])
 	emit_signal("hp_changed", "boss", boss_hp)
 	GameManager.active_loadout.default_heavy_combo_count = 0
@@ -286,10 +338,12 @@ func _player_sword_heavy_attack() -> void:
 	_check_echo_threshold()
 
 func can_use_sword_attack_action() -> bool:
-	return GameManager.active_loadout.default_combo_count >= SWORD_UNLOCK_THRESHOLD and GameManager.active_loadout.has_sword_attack_charges()
+	return GameManager.active_loadout.default_combo_count >= 1 \
+		and GameManager.active_loadout.has_sword_attack_charges()
 
 func can_use_sword_heavy_action() -> bool:
-	return GameManager.active_loadout.default_heavy_combo_count >= SWORD_UNLOCK_THRESHOLD and GameManager.active_loadout.has_sword_heavy_charges()
+	return GameManager.active_loadout.default_heavy_combo_count >= 1 \
+		and GameManager.active_loadout.has_sword_heavy_charges()
 
 func _player_defend() -> void:
 	player_is_defending = true

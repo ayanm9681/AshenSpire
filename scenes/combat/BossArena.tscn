@@ -1316,20 +1316,20 @@ icon = ExtResource("29_4po5o")
 [node name="SwordAttackButton" type="Button" parent="ActionMenu" unique_id=227692099]
 custom_minimum_size = Vector2(140, 140)
 layout_mode = 0
-offset_left = 139.85744
-offset_top = -1.000001
-offset_right = 331.85745
-offset_bottom = 181.0
+offset_left = 86.672226
+offset_top = -15.0
+offset_right = 278.67224
+offset_bottom = 167.0
 scale = Vector2(0.4815537, 0.49559996)
 icon = ExtResource("31_xlxgp")
 
 [node name="SwordHeavyButton" type="Button" parent="ActionMenu" unique_id=1200524722]
 custom_minimum_size = Vector2(160, 160)
 layout_mode = 0
-offset_left = 195.9974
-offset_top = 113.0
-offset_right = 377.58618
-offset_bottom = 290.01025
+offset_left = 130.00833
+offset_top = 108.0
+offset_right = 311.5971
+offset_bottom = 285.01025
 scale = Vector2(0.6536673, 0.6288095)
 icon = ExtResource("32_bgt4i")
 
