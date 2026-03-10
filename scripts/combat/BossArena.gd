@@ -78,6 +78,7 @@ func _connect_signals():
 	turn_manager.loadout_swapped.connect(_on_loadout_swapped)
 	turn_manager.charges_updated.connect(_on_charges_updated)
 	turn_manager.damage_taken.connect(_on_damage_taken)
+	turn_manager.combo_updated.connect(_on_combo_updated)
 
 func _connect_buttons():
 	attack_btn.pressed.connect(_on_attack_pressed)
@@ -139,6 +140,9 @@ func _on_hp_changed(entity, new_hp):
 func _on_damage_taken(entity: String, amount: int, is_crit: bool):
 	var target_sprite: AnimatedSprite2D = boss_sprite if entity == "boss" else active_hero
 	_show_floating_damage(target_sprite, amount, is_crit)
+
+func _on_combo_updated(combo_type: String, combo_count: int):
+	_show_floating_combo(active_hero, combo_type, combo_count)
 
 func _on_log_updated(message):
 	combat_log.append_text("\n" + message)
@@ -216,7 +220,8 @@ func _on_attack_pressed():
 		return
 	_hero_animating= true
 	_set_buttons_active(false)
-	await play_hero_attack()
+	var repeat_count: int = min(GameManager.active_loadout.default_combo_count + 1, TurnManager.MAX_COMBO_COUNT)
+	await play_hero_attack(repeat_count)
 	_hero_animating= false                             # ← hero attacks
 	turn_manager.player_act(TurnManager.PlayerAction.ATTACK)
 
@@ -226,7 +231,8 @@ func _on_heavy_attack_pressed():
 		return
 	_hero_animating= true
 	_set_buttons_active(false) 
-	await play_hero_heavy_attack()
+	var repeat_count: int = min(GameManager.active_loadout.default_heavy_combo_count + 1, TurnManager.MAX_COMBO_COUNT)
+	await play_hero_heavy_attack(repeat_count)
 	_hero_animating = false
 	turn_manager.player_act(TurnManager.PlayerAction.HEAVY_ATTACK)
 	
@@ -438,11 +444,11 @@ func flash_sprite(sprite: AnimatedSprite2D):
 	sprite.modulate = Color.WHITE
 	
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
-func play_hero_attack():
-	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, "attack")
+func play_hero_attack(repeat_count: int = 1):
+	await _execute_stationary_combo_attack(active_hero, "attack", repeat_count)
 	
-func play_hero_heavy_attack():
-	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, "heavyattack")
+func play_hero_heavy_attack(repeat_count: int = 1):
+	await _execute_stationary_combo_attack(active_hero, "heavyattack", repeat_count)
 
 func play_boss_attack():
 	if turn_manager.boss_next_move == "ENDURE":
@@ -494,6 +500,13 @@ func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, s
 	await _run_to_position(attacker, start_position)
 	attacker.play("idle")
 
+func _execute_stationary_combo_attack(attacker: AnimatedSprite2D, attack_animation: String, repeat_count: int):
+	var total_hits: int = max(1, min(repeat_count, TurnManager.MAX_COMBO_COUNT))
+	for i in total_hits:
+		attacker.play(attack_animation)
+		await attacker.animation_finished
+	attacker.play("idle")
+
 func _combat_target_position(attacker: AnimatedSprite2D, target: AnimatedSprite2D) -> Vector2:
 	var direction = sign(target.global_position.x - attacker.global_position.x)
 	if direction == 0:
@@ -532,3 +545,23 @@ func _show_floating_damage(target_sprite: AnimatedSprite2D, amount: int, is_crit
 	tween.tween_property(damage_label, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
 	await tween.finished
 	damage_label.queue_free()
+
+func _show_floating_combo(target_sprite: AnimatedSprite2D, combo_type: String, combo_count: int):
+	var combo_label := Label.new()
+	combo_label.text = "%s COMBO %d" % [combo_type.to_upper(), combo_count]
+	combo_label.z_index = 210
+	combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	combo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	combo_label.add_theme_font_size_override("font_size", 24)
+	combo_label.add_theme_constant_override("outline_size", 4)
+	combo_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+	combo_label.add_theme_color_override("font_color", Color(0.55, 0.95, 1.0) if combo_type == "heavy" else Color(1.0, 0.9, 0.4))
+	add_child(combo_label)
+	combo_label.global_position = target_sprite.global_position + Vector2(-70, -190)
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(combo_label, "global_position:y", combo_label.global_position.y - 60.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(combo_label, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	await tween.finished
+	combo_label.queue_free()
