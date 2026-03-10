@@ -445,10 +445,10 @@ func flash_sprite(sprite: AnimatedSprite2D):
 	
 # ─── ANIMATION SYSTEM ─────────────────────────────────────
 func play_hero_attack(repeat_count: int = 1):
-	await _execute_stationary_combo_attack(active_hero, "attack", repeat_count)
+	await _execute_run_combo_attack(active_hero, boss_sprite, _hero_start_position, "attack", repeat_count)
 	
 func play_hero_heavy_attack(repeat_count: int = 1):
-	await _execute_stationary_combo_attack(active_hero, "heavyattack", repeat_count)
+	await _execute_run_combo_attack(active_hero, boss_sprite, _hero_start_position, "heavyattack", repeat_count)
 
 func play_boss_attack():
 	if turn_manager.boss_next_move == "ENDURE":
@@ -500,6 +500,16 @@ func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, s
 	await _run_to_position(attacker, start_position)
 	attacker.play("idle")
 
+func _execute_run_combo_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String, repeat_count: int):
+	var total_hits: int = max(1, min(repeat_count, TurnManager.MAX_COMBO_COUNT))
+	var target_position = _combat_target_position(attacker, target)
+	await _run_to_position(attacker, target_position)
+	for i in total_hits:
+		attacker.play(attack_animation)
+		await attacker.animation_finished
+	await _run_to_position(attacker, start_position)
+	attacker.play("idle")
+
 func _execute_stationary_combo_attack(attacker: AnimatedSprite2D, attack_animation: String, repeat_count: int):
 	var total_hits: int = max(1, min(repeat_count, TurnManager.MAX_COMBO_COUNT))
 	for i in total_hits:
@@ -537,7 +547,7 @@ func _show_floating_damage(target_sprite: AnimatedSprite2D, amount: int, is_crit
 	if is_crit:
 		damage_label.text = "CRIT %d" % amount
 	add_child(damage_label)
-	damage_label.global_position = target_sprite.global_position + Vector2(-55, -145)
+	damage_label.global_position = target_sprite.global_position + Vector2(-55 + randf_range(-24.0, 24.0), -145 + randf_range(-12.0, 12.0))
 
 	var tween = create_tween()
 	tween.set_parallel(true)

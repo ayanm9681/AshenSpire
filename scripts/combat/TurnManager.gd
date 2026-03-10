@@ -182,9 +182,10 @@ func _player_attack() -> void:
 			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
 			had_crit = true
 		total_damage += hit_damage
+		boss_hp -= hit_damage
+		boss_hp = max(0, boss_hp)
+		emit_signal("damage_taken", "boss", hit_damage, crit_roll["is_crit"])
 
-	boss_hp -= total_damage
-	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += total_damage
 	threshold_turns += 1
 
@@ -192,7 +193,6 @@ func _player_attack() -> void:
 		emit_signal("combat_log_updated", "CRIT! You dealt %d damage over %d hit(s)." % [total_damage, hit_count])
 	else:
 		emit_signal("combat_log_updated", "You dealt %d damage over %d hit(s)." % [total_damage, hit_count])
-	emit_signal("damage_taken", "boss", total_damage, had_crit)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
@@ -214,9 +214,10 @@ func _player_heavy_attack() -> void:
 			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
 			had_crit = true
 		total_damage += hit_damage
+		boss_hp -= hit_damage
+		boss_hp = max(0, boss_hp)
+		emit_signal("damage_taken", "boss", hit_damage, crit_roll["is_crit"])
 
-	boss_hp -= total_damage
-	boss_hp = max(0, boss_hp)
 	threshold_damage_dealt += total_damage
 	threshold_turns += 1
 
@@ -224,7 +225,6 @@ func _player_heavy_attack() -> void:
 		emit_signal("combat_log_updated", "CRIT! HEAVY strike for %d damage over %d hit(s)." % [total_damage, hit_count])
 	else:
 		emit_signal("combat_log_updated", "You unleash a HEAVY strike for %d damage over %d hit(s)." % [total_damage, hit_count])
-	emit_signal("damage_taken", "boss", total_damage, had_crit)
 	emit_signal("hp_changed", "boss", boss_hp)
 
 	_check_echo_threshold()
