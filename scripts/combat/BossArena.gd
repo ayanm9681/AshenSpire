@@ -26,6 +26,7 @@ extends Node2D
 	$LoadoutPanel/Slot1Button,
 	$LoadoutPanel/Slot2Button
 ]
+@onready var close_loadout_btn = $LoadoutPanel/CloseButton
 
 var active_hero: AnimatedSprite2D
 
@@ -79,9 +80,13 @@ func _connect_buttons():
 	sword_attack_btn.pressed.connect(_on_sword_attack_pressed)
 	sword_heavy_btn.pressed.connect(_on_sword_heavy_pressed)
 	loadout_btn.pressed.connect(_on_loadout_btn_pressed)
+	close_loadout_btn.pressed.connect(_on_loadout_panel_cancel_pressed)
 	for i in loadout_slot_btns.size():
 		var idx = i  # capture for closure
 		loadout_slot_btns[i].pressed.connect(func(): _on_loadout_slot_pressed(idx))
+	for btn in [attack_btn, heavy_attack_btn, sword_attack_btn, 
+				sword_heavy_btn, defend_btn, item_btn, loadout_btn]:
+		_add_button_bounce(btn)	
 
 func _initialise_ui():
 	boss_name_label.text = "THE WARDEN"
@@ -106,7 +111,7 @@ func _on_boss_attack_started():
 func _on_hp_changed(entity, new_hp):
 	if entity == "boss":
 		boss_hp_bar.value = new_hp
-		await _screen_shake(18.0, 0.2)
+		_screen_shake(18.0, 0.2)
 		await hit_pause(0.07)
 		await flash_sprite(boss_sprite)
 		if new_hp <= 0:
@@ -115,7 +120,7 @@ func _on_hp_changed(entity, new_hp):
 			await play_boss_hurt()
 	elif entity == "player":
 		player_hp_bar.value = new_hp
-		await _screen_shake(14.0, 0.18)
+		_screen_shake(14.0, 0.18)
 		await hit_pause(0.05)
 		await flash_sprite(active_hero)
 		if new_hp <= 0:
@@ -152,6 +157,10 @@ func _on_charges_updated(charges: int, _max_charges: int):
 	sword_heavy_btn.text = "SWORD HVY [%d]" % charges
 	sword_attack_btn.disabled = charges <= 0
 	sword_heavy_btn.disabled = charges <= 0
+	# Recalculate pivot after text/size change
+	await get_tree().process_frame   # wait one frame for layout to update
+	sword_attack_btn.pivot_offset = sword_attack_btn.size / 2.0
+	sword_heavy_btn.pivot_offset = sword_heavy_btn.size / 2.0
 
 func _on_loadout_swapped(new_loadout):
 	active_hero = hero_sprite2   # always hero_sprite2 now
@@ -163,6 +172,9 @@ func _on_loadout_swapped(new_loadout):
 
 	_hero_start_position = active_hero.global_position
 	active_hero.play("idle")
+	
+	# Immediately refresh charge display
+	_on_charges_updated(new_loadout.sword_charges, new_loadout.sword_max_charges)
 
 	combat_log.append_text(
 		"\nEquipping: %s (DMG: %d)" % [
@@ -233,12 +245,17 @@ func _on_loadout_panel_cancel_pressed():
 func _refresh_loadout_panel():
 	var all_loadouts = [GameManager.active_loadout] + GameManager.backup_loadouts
 	for i in loadout_slot_btns.size():
+		if i >= all_loadouts.size():
+			loadout_slot_btns[i].text = "Empty"
+			loadout_slot_btns[i].disabled = true
+			continue
 		var ld = all_loadouts[i]
+		var is_active = (ld == GameManager.active_loadout)
+		var is_dead = (ld.current_hp <= 0)
 		loadout_slot_btns[i].text = "%s\nHP: %d/%d\nCharges: %d" % [
 			ld.weapon_name, ld.current_hp, ld.max_hp, ld.sword_charges
 		]
-		loadout_slot_btns[i].disabled = (ld == GameManager.active_loadout)
-		# Update icon
+		loadout_slot_btns[i].disabled = is_active or is_dead  # ← disable dead ones too
 		var icon = loadout_slot_btns[i].get_node("TextureRect")
 		if ld.sword_icon:
 			icon.texture = ld.sword_icon
@@ -290,6 +307,7 @@ func _apply_loadout_panel_style():
 	]
 	for i in loadout_slot_btns.size():
 		_apply_button_style(loadout_slot_btns[i], slot_colors[i][0], slot_colors[i][1])
+	_apply_button_style(close_loadout_btn, Color(0.5, 0.1, 0.1), Color(0.3, 0.05, 0.05))
 
 func _make_bar_style(fill_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
@@ -316,6 +334,18 @@ func _apply_button_style(button: Button, primary: Color, accent: Color):
 	button.add_theme_stylebox_override("hover", _make_button_style(primary.lightened(0.2), accent.lightened(0.15), 999, 2))
 	button.add_theme_stylebox_override("pressed", _make_button_style(primary.darkened(0.18), accent.darkened(0.2), 999, 2))
 	button.add_theme_stylebox_override("disabled", _make_button_style(Color(0.25, 0.25, 0.25, 0.65), Color(0.12, 0.12, 0.12, 0.8), 999, 1))
+
+func _add_button_bounce(button: Button):
+	button.pivot_offset = button.size / 2.0
+	button.pressed.connect(func():
+		button.pivot_offset = button.size / 2.0  # recalculate in case size changed
+		var original_scale = button.scale
+		var tween = create_tween()
+		tween.tween_property(button, "scale", original_scale * 0.88, 0.07)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tween.tween_property(button, "scale", original_scale, 0.12)\
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	)
 
 func _make_button_style(fill_color: Color, border_color: Color, corner_radius: int, border_size: int) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()

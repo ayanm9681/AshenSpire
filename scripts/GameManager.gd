@@ -66,14 +66,17 @@ func _initialise_loadouts():
 # ─── DEATH HANDLER ────────────────────────────────────────
 # Returns true if run continues, false if run is over
 func on_player_death() -> bool:
-	if backup_loadouts.is_empty():
-		return false
-	# Proper swap — put dead loadout into backup, take first backup as active
+	# Find first backup that still has HP
+	var viable_index = -1
+	for i in backup_loadouts.size():
+		if backup_loadouts[i].current_hp > 0:
+			viable_index = i
+			break
+	if viable_index == -1:
+		return false  # all loadouts dead, run over
 	var previous_active = active_loadout
-	active_loadout = backup_loadouts[0]
-	backup_loadouts[0] = previous_active
-	# Reset the dead loadout's HP for next time
-	backup_loadouts[0].current_hp = backup_loadouts[0].max_hp
+	active_loadout = backup_loadouts[viable_index]
+	backup_loadouts[viable_index] = previous_active
 	echo_threshold_met = false
 	echo_snapshot = {}
 	return true

@@ -146,13 +146,13 @@ func player_swap_loadout(loadout_index: int) -> void:
 		emit_signal("hp_changed", "player", player_hp)
 		emit_signal("charges_updated", GameManager.active_loadout.sword_charges, GameManager.active_loadout.sword_max_charges)
 		emit_signal("combat_log_updated", "Switched to %s!" % GameManager.active_loadout.weapon_name)
-		# Counts as your turn
-		turn_state = TurnState.BOSS_TURN
-		emit_signal("boss_turn_started")
-		await get_tree().create_timer(0.35).timeout
-		emit_signal("boss_attack_started")
-		await get_tree().create_timer(0.85).timeout
-		_boss_act()
+		## Counts as your turn
+		#turn_state = TurnState.BOSS_TURN
+		#emit_signal("boss_turn_started")
+		#await get_tree().create_timer(0.35).timeout
+		#emit_signal("boss_attack_started")
+		#await get_tree().create_timer(0.85).timeout
+		#_boss_act()
 
 func _player_attack() -> void:
 	var base: int = default_player_damage - boss_defense

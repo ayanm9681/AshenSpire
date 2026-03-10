@@ -1411,3 +1411,11 @@ layout_mode = 0
 offset_right = 85.0
 offset_bottom = 84.0
 texture = ExtResource("32_flwco")
+
+[node name="CloseButton" type="Button" parent="LoadoutPanel" unique_id=123864125]
+layout_mode = 0
+offset_left = 570.0
+offset_top = 12.0
+offset_right = 620.0
+offset_bottom = 43.0
+text = "Close"
