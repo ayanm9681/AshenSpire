@@ -558,7 +558,7 @@ func _show_floating_damage(target_sprite: AnimatedSprite2D, amount: int, is_crit
 
 func _show_floating_combo(target_sprite: AnimatedSprite2D, combo_type: String, combo_count: int):
 	var combo_label := Label.new()
-	combo_label.text = "%s COMBO %d" % [combo_type.to_upper(), combo_count]
+	combo_label.text = "HEAVY COMBO %d" % combo_count if combo_type == "heavy" else "COMBO %d" % combo_count
 	combo_label.z_index = 210
 	combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	combo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

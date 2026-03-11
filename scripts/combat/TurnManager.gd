@@ -173,11 +173,21 @@ func _player_attack() -> void:
 	var total_damage: int = 0
 	var had_crit: bool = false
 
+	# Scale crit based on combo level
+	var crit_chance := HERO_BASE_CRIT_CHANCE
+	var crit_multiplier := HERO_BASE_CRIT_MULTIPLIER
+	if combo_before >= MAX_COMBO_COUNT:
+		crit_chance += 0.20
+		crit_multiplier += 0.4
+	elif combo_before >= 2:
+		crit_chance += 0.10
+		crit_multiplier += 0.2
+
 	for i in hit_count:
 		var base: int = default_player_damage - boss_defense
 		var hit_damage: int = base if base > 0 else 1
-		hit_damage += 2  # small balance adjustment
-		var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+		hit_damage += 2
+		var crit_roll := _roll_critical(crit_chance, crit_multiplier)
 		if crit_roll["is_crit"]:
 			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
 			had_crit = true
@@ -206,10 +216,19 @@ func _player_heavy_attack() -> void:
 	var total_damage: int = 0
 	var had_crit: bool = false
 
+	var crit_chance := HERO_BASE_CRIT_CHANCE
+	var crit_multiplier := HERO_BASE_CRIT_MULTIPLIER
+	if combo_before >= MAX_COMBO_COUNT:
+		crit_chance += 0.20
+		crit_multiplier += 0.4
+	elif combo_before >= 2:
+		crit_chance += 0.10
+		crit_multiplier += 0.2
+
 	for i in hit_count:
 		var base: int = default_player_damage - boss_defense
 		var hit_damage: int = int(max(base, 1) * GameManager.default_heavy_multiplier)
-		var crit_roll := _roll_critical(HERO_BASE_CRIT_CHANCE, HERO_BASE_CRIT_MULTIPLIER)
+		var crit_roll := _roll_critical(crit_chance, crit_multiplier)
 		if crit_roll["is_crit"]:
 			hit_damage = int(round(float(hit_damage) * crit_roll["multiplier"]))
 			had_crit = true
@@ -239,34 +258,39 @@ func _player_sword_attack() -> void:
 		return
 
 	var combo: int = GameManager.active_loadout.default_combo_count
-
-	# Determine charge cost before spending
 	var charge_cost: int = 1
 	if combo >= MAX_COMBO_COUNT:
 		charge_cost = 4
 	elif combo >= 2:
 		charge_cost = 2
 
-	# Check if enough charges exist
 	if GameManager.active_loadout.sword_attack_charges < charge_cost:
 		emit_signal("combat_log_updated", "Not enough charges! Need %d, have %d." % [charge_cost, GameManager.active_loadout.sword_attack_charges])
 		threshold_turns += 1
 		return
 
-	# Spend charges
 	for i in charge_cost:
 		GameManager.active_loadout.use_sword_attack_charge()
+
+	# Degrade and recalculate
+	GameManager.active_loadout.degrade_weapon(2)
+	sword_player_damage = GameManager.active_loadout.effective_damage()
+
+	# Check weapon broken after degrade
+	if GameManager.active_loadout.weapon_broken():
+		emit_signal("combat_log_updated", "Your weapon shattered!")
+		_handle_player_death()
+		return
 
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = base if base > 0 else 1
 	damage += 2
 
 	var sword_crit := _hero_sword_crit_values()
-
 	if combo >= MAX_COMBO_COUNT:
-		sword_crit["chance"] = 1.0  # guaranteed
+		sword_crit["chance"] = 1.0
 		sword_crit["multiplier"] += COMBO_LEVEL3_CRIT_BOOST
-		GameManager.active_loadout.refund_sword_attack_charge(1)
+		GameManager.active_loadout.refund_sword_attack_charge(2)
 	elif combo >= 2:
 		sword_crit["chance"] += COMBO_LEVEL2_CRIT_BOOST
 		sword_crit["multiplier"] += COMBO_LEVEL2_CRIT_BOOST
@@ -300,37 +324,38 @@ func _player_sword_heavy_attack() -> void:
 		return
 
 	var combo: int = GameManager.active_loadout.default_heavy_combo_count
-
-	# Determine charge cost
 	var charge_cost: int = 1
 	if combo >= MAX_COMBO_COUNT:
 		charge_cost = 4
 	elif combo >= 2:
 		charge_cost = 2
 
-	# Check if enough charges exist
 	if GameManager.active_loadout.sword_heavy_charges < charge_cost:
 		emit_signal("combat_log_updated", "Not enough charges! Need %d, have %d." % [charge_cost, GameManager.active_loadout.sword_heavy_charges])
 		threshold_turns += 1
 		return
 
-	# Spend charges
 	for i in charge_cost:
 		GameManager.active_loadout.use_sword_heavy_charge()
 
-	# Degrade weapon and recalculate damage
+	# Degrade and recalculate
 	GameManager.active_loadout.degrade_weapon(5)
 	sword_player_damage = GameManager.active_loadout.effective_damage()
+
+	# Check weapon broken after degrade
+	if GameManager.active_loadout.weapon_broken():
+		emit_signal("combat_log_updated", "Your weapon shattered!")
+		_handle_player_death()
+		return
 
 	var base: int = sword_player_damage - boss_defense
 	var damage: int = int(max(base, 1) * 1.8)
 
 	var sword_crit := _hero_sword_crit_values()
-
 	if combo >= MAX_COMBO_COUNT:
-		sword_crit["chance"] = 1.0  # guaranteed
+		sword_crit["chance"] = 1.0
 		sword_crit["multiplier"] += COMBO_LEVEL3_CRIT_BOOST
-		GameManager.active_loadout.refund_sword_heavy_charge(1)
+		GameManager.active_loadout.refund_sword_heavy_charge(2)
 	elif combo >= 2:
 		sword_crit["chance"] += COMBO_LEVEL2_CRIT_BOOST
 		sword_crit["multiplier"] += COMBO_LEVEL2_CRIT_BOOST
@@ -417,10 +442,11 @@ func _boss_act() -> void:
 	var final_damage: int = raw_damage
 
 	if player_is_defending:
+		var armor_factor: float = 1.0 - (float(player_defense) / (float(player_defense) + 40.0))
 		if boss_next_move == "HEAVY":
-			final_damage = int(raw_damage * 0.35)  # 65% reduction
+			final_damage = int(raw_damage * 0.35 * armor_factor)
 		else:
-			final_damage = int(raw_damage * 0.5)   # 50% reduction
+			final_damage = int(raw_damage * 0.5 * armor_factor)
 
 	player_hp -= final_damage
 	player_hp = max(0, player_hp)

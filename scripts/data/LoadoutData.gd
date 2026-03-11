@@ -129,5 +129,5 @@ var default_combo_count: int = 0
 var default_heavy_combo_count: int = 0
 	
 # ─── HP ───────────────────────────────────────────────────
-var current_hp: int = 100
-var max_hp: int = 100
+var current_hp: int = 250
+var max_hp: int = 250
