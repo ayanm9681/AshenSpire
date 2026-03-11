@@ -252,12 +252,16 @@ func _player_heavy_attack() -> void:
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 
 func _player_sword_attack() -> void:
+	
 	if not can_use_sword_attack_action():
 		emit_signal("combat_log_updated", "Sword attack locked. Build 1 default attack first.")
 		threshold_turns += 1
 		return
 
-	var combo: int = GameManager.active_loadout.default_combo_count
+	var combo: int = get_effective_sword_combo(
+	GameManager.active_loadout.default_combo_count,
+	GameManager.active_loadout.sword_attack_charges
+)
 	var charge_cost: int = 1
 	if combo >= MAX_COMBO_COUNT:
 		charge_cost = 4
@@ -323,7 +327,10 @@ func _player_sword_heavy_attack() -> void:
 		threshold_turns += 1
 		return
 
-	var combo: int = GameManager.active_loadout.default_heavy_combo_count
+	var combo: int = get_effective_sword_combo(
+	GameManager.active_loadout.default_heavy_combo_count,
+	GameManager.active_loadout.sword_heavy_charges
+)
 	var charge_cost: int = 1
 	if combo >= MAX_COMBO_COUNT:
 		charge_cost = 4
@@ -579,3 +586,12 @@ func _roll_critical(chance: float, multiplier: float) -> Dictionary:
 		"is_crit": randf() <= chance,
 		"multiplier": multiplier
 	}
+
+func get_effective_sword_combo(combo: int, charges: int) -> int:
+	if combo >= MAX_COMBO_COUNT and charges >= 4:
+		return 3
+	elif combo >= 2 and charges >= 2:
+		return 2
+	elif combo >= 1 and charges >= 1:
+		return 1
+	return 0

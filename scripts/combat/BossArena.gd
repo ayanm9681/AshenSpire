@@ -27,6 +27,12 @@ extends Node2D
 	$LoadoutPanel/Slot2Button
 ]
 @onready var close_loadout_btn = $LoadoutPanel/CloseButton
+@onready var sfx_player_attack = $SFX_PlayerAttack
+@onready var sfx_player_heavy = $SFX_PlayerHeavy
+@onready var sfx_sword_attack = $SFX_SwordAttack
+@onready var sfx_sword_heavy = $SFX_SwordHeavy
+@onready var sfx_boss_heavy = $SFX_BossHeavy
+@onready var sfx_boss_attack = $SFX_BossAttack
 
 var active_hero: AnimatedSprite2D
 
@@ -241,6 +247,10 @@ func _on_sword_attack_pressed():
 		return
 	_hero_animating = true
 	_set_buttons_active(false)
+	var effective_combo = turn_manager.get_effective_sword_combo(
+		GameManager.active_loadout.default_combo_count,
+		GameManager.active_loadout.sword_attack_charges
+	)
 	var anim = GameManager.active_loadout.get_attack_animation()
 	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
 	_hero_animating = false
@@ -251,6 +261,10 @@ func _on_sword_heavy_pressed():
 		return
 	_hero_animating = true
 	_set_buttons_active(false)
+	var effective_combo = turn_manager.get_effective_sword_combo(
+		GameManager.active_loadout.default_heavy_combo_count,
+		GameManager.active_loadout.sword_heavy_charges
+	)
 	var anim = GameManager.active_loadout.get_heavy_animation()
 	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
 	_hero_animating = false
@@ -495,6 +509,17 @@ func _play_death_animation(sprite: AnimatedSprite2D, is_boss: bool):
 func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
 	var target_position = _combat_target_position(attacker, target)
 	await _run_to_position(attacker, target_position)
+	# Play sound at moment of attack
+	if attacker == boss_sprite:
+		if attack_animation == BOSS_HEAVY_ATTACK_ANIMATION:
+			sfx_boss_heavy.play()
+		else:
+			sfx_boss_attack.play()
+	elif attacker == active_hero:
+		if attack_animation.ends_with("heavy"):
+			sfx_sword_heavy.play()
+		else:
+			sfx_sword_attack.play()
 	attacker.play(attack_animation)
 	await attacker.animation_finished
 	await _run_to_position(attacker, start_position)
@@ -506,6 +531,10 @@ func _execute_run_combo_attack(attacker: AnimatedSprite2D, target: AnimatedSprit
 	await _run_to_position(attacker, target_position)
 	for i in total_hits:
 		attacker.play(attack_animation)
+		if attack_animation == "heavyattack":
+			sfx_player_heavy.play()
+		else:
+			sfx_player_attack.play()
 		await attacker.animation_finished
 	await _run_to_position(attacker, start_position)
 	attacker.play("idle")
@@ -575,3 +604,4 @@ func _show_floating_combo(target_sprite: AnimatedSprite2D, combo_type: String, c
 	tween.tween_property(combo_label, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
 	await tween.finished
 	combo_label.queue_free()
+	
