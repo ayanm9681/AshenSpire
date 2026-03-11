@@ -115,7 +115,6 @@ func _initialise_ui():
 # ─── SIGNAL HANDLERS ──────────────────────────────────────
 var _boss_animating: bool = false
 var _boss_dead_anim_played: bool = false
-var _hero_dead_anim_played: bool = false
 
 func _on_boss_attack_started():
 	_boss_animating= true
@@ -138,7 +137,7 @@ func _on_hp_changed(entity, new_hp):
 		await hit_pause(0.05)
 		await flash_sprite(active_hero)
 		if new_hp <= 0:
-			await _play_death_animation(active_hero, false)
+			await _play_hero_final_death()
 		else:
 			await play_hero_hurt()
 
@@ -172,7 +171,7 @@ func _on_combat_ended(player_won):
 	else:
 		telegraph_label.text = "Your run ends here."
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
-		await _play_death_animation(active_hero, false)
+		await _play_hero_final_death()
 
 func _on_charges_updated(attack_charges: int, _attack_max_charges: int, heavy_charges: int, _heavy_max_charges: int):
 	var atk_cost = _get_charge_cost(GameManager.active_loadout.default_combo_count)
@@ -201,7 +200,9 @@ func _on_loadout_swapped(new_loadout):
 	sword_heavy_btn.visible = true
 
 	_hero_start_position = active_hero.global_position
-	active_hero.play("idle")
+	active_hero.modulate = Color.WHITE
+	await get_tree().create_timer(0.2).timeout
+	await _play_hero_rebirth_animation()
 	
 	# Immediately refresh charge display
 	_on_charges_updated(
@@ -496,15 +497,31 @@ func play_hero_hurt():
 func _play_death_animation(sprite: AnimatedSprite2D, is_boss: bool):
 	if is_boss and _boss_dead_anim_played:
 		return
-	if not is_boss and _hero_dead_anim_played:
-		return
 	if is_boss:
 		_boss_dead_anim_played = true
-	else:
-		_hero_dead_anim_played = true
 	if sprite.sprite_frames and sprite.sprite_frames.has_animation("death"):
 		sprite.play("death")
 		await sprite.animation_finished
+
+func _play_hero_final_death() -> void:
+	if not active_hero.sprite_frames or not active_hero.sprite_frames.has_animation("death"):
+		return
+	active_hero.play("idle")
+	await get_tree().process_frame
+	active_hero.play("death")
+	await active_hero.animation_finished
+
+func _play_hero_rebirth_animation() -> void:
+	if not active_hero.sprite_frames or not active_hero.sprite_frames.has_animation("death"):
+		active_hero.play("idle")
+		return
+	var death_fps := max(active_hero.sprite_frames.get_animation_speed("death"), 1.0)
+	var death_frame_count := active_hero.sprite_frames.get_frame_count("death")
+	active_hero.stop()
+	for frame_index in range(death_frame_count - 1, -1, -1):
+		active_hero.frame = frame_index
+		await get_tree().create_timer(1.0 / death_fps).timeout
+	active_hero.play("idle")
 
 func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
 	var target_position = _combat_target_position(attacker, target)
