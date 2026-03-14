@@ -17,6 +17,7 @@ signal loadout_swapped(new_loadout)
 signal charges_updated(attack_charges: int, attack_max_charges: int, heavy_charges: int, heavy_max_charges: int)
 signal damage_taken(entity: String, amount: int, is_crit: bool)
 signal combo_updated(combo_type: String, combo_count: int)
+signal rebirth_animation_finished()
 
 # ==============================
 # ENUMS
@@ -547,7 +548,7 @@ func _check_end() -> void:
 # ==============================
 
 func _handle_player_death() -> void:
-	turn_state = TurnState.ENDED 
+	turn_state = TurnState.ENDED
 	var run_continues: bool = GameManager.on_player_death()
 
 	if run_continues:
@@ -555,7 +556,8 @@ func _handle_player_death() -> void:
 		emit_signal("loadout_swapped", GameManager.active_loadout)
 		emit_signal("hp_changed", "player", player_hp)
 		emit_signal("combat_log_updated", "You rise again with a new loadout!")
-		await get_tree().create_timer(1.0).timeout
+		# Wait for BossArena to finish the rebirth animation
+		await rebirth_animation_finished
 		turn_state = TurnState.PLAYER_TURN
 		emit_signal("player_turn_started")
 	else:

@@ -105,3 +105,7 @@ func swap_to_loadout(index: int) -> bool:
 	backup_loadouts[index] = active_loadout
 	active_loadout = target
 	return true
+	
+func reset_for_new_stage() -> void:
+	_initialise_loadouts()
+	player_hp = active_loadout.max_hp

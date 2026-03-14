@@ -1,85 +1,21 @@
 [gd_scene format=3 uid="uid://imjvtc0ifokh"]
 
 [ext_resource type="Script" uid="uid://48mru6nfal0a" path="res://scripts/combat/SlashEffect.gd" id="2_f8g1f"]
-[ext_resource type="Texture2D" uid="uid://dfmfjj33g748d" path="res://assets/art/effects/ice_attack001.png" id="2_ryikf"]
-[ext_resource type="Texture2D" uid="uid://b3ymvxjdkanyv" path="res://assets/art/effects/ice_attack002.png" id="3_vopko"]
-[ext_resource type="Texture2D" uid="uid://bo5odotqq4ftt" path="res://assets/art/effects/ice_attack003.png" id="4_3l1rs"]
-[ext_resource type="Texture2D" uid="uid://c0scnrxjcxohe" path="res://assets/art/effects/ice_attack004.png" id="5_lga54"]
-[ext_resource type="Texture2D" uid="uid://bbnm36rct43r5" path="res://assets/art/effects/ice_attack005.png" id="6_io0qg"]
-[ext_resource type="Texture2D" uid="uid://dbmabyyitosft" path="res://assets/art/effects/ice_attack006.png" id="7_38tk6"]
-[ext_resource type="Texture2D" uid="uid://f38xed30xb82" path="res://assets/art/effects/ice_attack007.png" id="8_4bwgt"]
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_f8g1f"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_v5hhq"]
 animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("2_ryikf")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_vopko")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_3l1rs")
-}, {
-"duration": 1.0,
-"texture": ExtResource("5_lga54")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_io0qg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_38tk6")
-}, {
-"duration": 1.0,
-"texture": ExtResource("8_4bwgt")
-}],
-"loop": false,
-"name": &"slash",
-"speed": 12.0
-}]
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_sc1c4"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("6_io0qg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_38tk6")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_io0qg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_38tk6")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_io0qg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_38tk6")
-}],
-"loop": false,
-"name": &"slash",
-"speed": 5.0
+"frames": [],
+"loop": true,
+"name": &"default",
+"speed": 10.0
 }]
 
 [node name="SlashEffect" type="Node2D" unique_id=1372903767]
 script = ExtResource("2_f8g1f")
 
-[node name="SlashSpriteOld" type="AnimatedSprite2D" parent="." unique_id=1628780445]
-position = Vector2(41, -69)
-rotation = -1.5759853
-scale = Vector2(0.25875485, 0.2345679)
-sprite_frames = SubResource("SpriteFrames_f8g1f")
-animation = &"slash"
-frame = 6
-frame_progress = 1.0
-
-[node name="SlashSprite" type="AnimatedSprite2D" parent="." unique_id=260065201]
-position = Vector2(4.7683716e-07, -9.536743e-07)
-scale = Vector2(4.330591, 1.8426678)
-sprite_frames = SubResource("SpriteFrames_sc1c4")
-animation = &"slash"
-frame = 5
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1923578876]
+position = Vector2(286.625, 276.5)
+rotation = 0.008854691
+scale = Vector2(2.299479, 3.0104163)
+sprite_frames = SubResource("SpriteFrames_v5hhq")
 frame_progress = 1.0

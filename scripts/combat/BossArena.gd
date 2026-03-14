@@ -33,6 +33,7 @@ extends Node2D
 @onready var sfx_sword_heavy = $SFX_SwordHeavy
 @onready var sfx_boss_heavy = $SFX_BossHeavy
 @onready var sfx_boss_attack = $SFX_BossAttack
+@onready var boss_effects: BossEffects = $BossEffects
 
 var active_hero: AnimatedSprite2D
 
@@ -145,6 +146,8 @@ func _on_hp_changed(entity, new_hp):
 func _on_damage_taken(entity: String, amount: int, is_crit: bool):
 	var target_sprite: AnimatedSprite2D = boss_sprite if entity == "boss" else active_hero
 	_show_floating_damage(target_sprite, amount, is_crit)
+	if is_crit and entity == "boss":
+		boss_effects.play_effect("crit_burst")
 
 func _on_combo_updated(combo_type: String, combo_count: int):
 	_show_floating_combo(active_hero, combo_type, combo_count)
@@ -168,6 +171,10 @@ func _on_combat_ended(player_won):
 		telegraph_label.text = "Victory. The Warden falls."
 		combat_log.append_text("\n\n— YOUR RUN CONTINUES —")
 		await _play_death_animation(boss_sprite, true)
+		# Wait a moment then transition
+		await get_tree().create_timer(2.0).timeout
+		GameManager.reset_for_new_stage()
+		get_tree().change_scene_to_file("res://scenes/combat/BossArena2.tscn")
 	else:
 		telegraph_label.text = "Your run ends here."
 		combat_log.append_text("\n\n— THE SPIRE CLAIMS YOU —")
@@ -201,7 +208,7 @@ func _on_loadout_swapped(new_loadout):
 
 	_hero_start_position = active_hero.global_position
 	active_hero.modulate = Color.WHITE
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(0.5).timeout
 	await _play_hero_rebirth_animation()
 	
 	# Immediately refresh charge display
@@ -217,6 +224,7 @@ func _on_loadout_swapped(new_loadout):
 			new_loadout.weapon_name,
 			new_loadout.weapon_damage
 		])
+	turn_manager.rebirth_animation_finished.emit()
 
 # ─── BUTTON HANDLERS ──────────────────────────────────────
 
@@ -248,10 +256,6 @@ func _on_sword_attack_pressed():
 		return
 	_hero_animating = true
 	_set_buttons_active(false)
-	var effective_combo = turn_manager.get_effective_sword_combo(
-		GameManager.active_loadout.default_combo_count,
-		GameManager.active_loadout.sword_attack_charges
-	)
 	var anim = GameManager.active_loadout.get_attack_animation()
 	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
 	_hero_animating = false
@@ -262,10 +266,6 @@ func _on_sword_heavy_pressed():
 		return
 	_hero_animating = true
 	_set_buttons_active(false)
-	var effective_combo = turn_manager.get_effective_sword_combo(
-		GameManager.active_loadout.default_heavy_combo_count,
-		GameManager.active_loadout.sword_heavy_charges
-	)
 	var anim = GameManager.active_loadout.get_heavy_animation()
 	await _execute_run_attack(active_hero, boss_sprite, _hero_start_position, anim)
 	_hero_animating = false
@@ -515,7 +515,7 @@ func _play_hero_rebirth_animation() -> void:
 	if not active_hero.sprite_frames or not active_hero.sprite_frames.has_animation("death"):
 		active_hero.play("idle")
 		return
-	var death_fps := max(active_hero.sprite_frames.get_animation_speed("death"), 1.0)
+	var death_fps: float= max(active_hero.sprite_frames.get_animation_speed("death"), 1.0)
 	var death_frame_count := active_hero.sprite_frames.get_frame_count("death")
 	active_hero.stop()
 	for frame_index in range(death_frame_count - 1, -1, -1):
@@ -526,7 +526,7 @@ func _play_hero_rebirth_animation() -> void:
 func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String):
 	var target_position = _combat_target_position(attacker, target)
 	await _run_to_position(attacker, target_position)
-	# Play sound at moment of attack
+
 	if attacker == boss_sprite:
 		if attack_animation == BOSS_HEAVY_ATTACK_ANIMATION:
 			sfx_boss_heavy.play()
@@ -537,12 +537,21 @@ func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, s
 			sfx_sword_heavy.play()
 		else:
 			sfx_sword_attack.play()
+
 	attacker.play(attack_animation)
+
+	# Wait until frame 2 then spawn effect on target
+	await _wait_for_frame(attacker, 2)
+	if attacker == active_hero:
+		var is_heavy = attack_animation.ends_with("heavy")
+		for effect_name in _get_effect_for_loadout(is_heavy):
+			boss_effects.play_effect(effect_name)
+
 	await attacker.animation_finished
 	await _run_to_position(attacker, start_position)
 	attacker.play("idle")
 
-func _execute_run_combo_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2, attack_animation: String, repeat_count: int):
+func _execute_run_combo_attack(attacker, target, start_position, attack_animation, repeat_count):
 	var total_hits: int = max(1, min(repeat_count, TurnManager.MAX_COMBO_COUNT))
 	var target_position = _combat_target_position(attacker, target)
 	await _run_to_position(attacker, target_position)
@@ -552,6 +561,10 @@ func _execute_run_combo_attack(attacker: AnimatedSprite2D, target: AnimatedSprit
 			sfx_player_heavy.play()
 		else:
 			sfx_player_attack.play()
+		await _wait_for_frame(attacker, 2)
+		var is_heavy = attack_animation == "heavyattack"
+		for effect_name in _get_effect_for_loadout(is_heavy):
+			boss_effects.play_effect(effect_name)
 		await attacker.animation_finished
 	await _run_to_position(attacker, start_position)
 	attacker.play("idle")
@@ -622,3 +635,13 @@ func _show_floating_combo(target_sprite: AnimatedSprite2D, combo_type: String, c
 	await tween.finished
 	combo_label.queue_free()
 	
+func _get_effect_for_loadout(is_heavy: bool = false) -> Array:
+	match GameManager.active_loadout.weapon_type:
+		LoadoutData.WeaponType.EXCALIBUR: return ["sunburst"]
+		LoadoutData.WeaponType.DURANDAL: return ["lightning"]
+		LoadoutData.WeaponType.SUNSWORD: return ["green_slash"]
+		_: return ["impactdown"] if is_heavy else ["impact"]
+		
+func _wait_for_frame(sprite: AnimatedSprite2D, frame_number: int) -> void:
+	while sprite.frame < frame_number:
+		await get_tree().process_frame
