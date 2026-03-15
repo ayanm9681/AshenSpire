@@ -8,6 +8,7 @@ extends Node2D
 @onready var impact = $ImpactBurst
 @onready var impactdown = $ImpactBurstDown
 @onready var crit_burst = $CritBurst
+@onready var execution_attack = $ExecutionAttack
 
 func _ready():
 	for child in get_children():
@@ -22,6 +23,7 @@ func play_effect(effect_name: String) -> void:
 		"impact": effect = impact
 		"impactdown": effect = impactdown
 		"crit_burst": effect = crit_burst
+		"execution_attack": effect = execution_attack 
 		_: return
 	effect.visible = true
 	effect.play("default")

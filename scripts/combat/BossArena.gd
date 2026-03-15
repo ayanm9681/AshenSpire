@@ -14,12 +14,13 @@ extends Node2D
 @onready var heavy_attack_btn = $ActionMenu/HeavyAttackButton
 @onready var defend_btn = $ActionMenu/DefendButton
 @onready var item_btn = $ActionMenu/ItemButton
+@onready var execution_btn = $ActionMenu/ExecutionButton
 @onready var turn_manager = $TurnManager
 @onready var hero_sprite2 = $PlayerContainer/HeroSprite2    # sword hero
 @onready var sword_attack_btn = $ActionMenu/SwordAttackButton
 @onready var sword_heavy_btn = $ActionMenu/SwordHeavyButton
 @onready var loadout_btn = $LoadoutButton
-@onready var charges_label = $ActionMenu/SwordAttackButton/ChargesLabel
+#@onready var charges_label = $ActionMenu/SwordAttackButton/ChargesLabel
 @onready var loadout_panel = $LoadoutPanel
 @onready var loadout_slot_btns = [
 	$LoadoutPanel/Slot0Button,
@@ -33,11 +34,13 @@ extends Node2D
 @onready var sfx_sword_heavy = $SFX_SwordHeavy
 @onready var sfx_boss_heavy = $SFX_BossHeavy
 @onready var sfx_boss_attack = $SFX_BossAttack
+@onready var sfx_execution_attack = $SFX_ExecutionAttack
 @onready var boss_effects: BossEffects = $BossEffects
 
 var active_hero: AnimatedSprite2D
 
 const RUN_SPEED: float = 900.0
+const EXECUTION_RUN_SPEED: float = 2800.0
 const BOSS_NORMAL_ATTACK_ANIMATION: String = "attack"
 const BOSS_HEAVY_ATTACK_ANIMATION: String = "heavyattack"
 
@@ -87,6 +90,7 @@ func _connect_signals():
 	turn_manager.damage_taken.connect(_on_damage_taken)
 	turn_manager.combo_updated.connect(_on_combo_updated)
 
+
 func _connect_buttons():
 	attack_btn.pressed.connect(_on_attack_pressed)
 	heavy_attack_btn.pressed.connect(_on_heavy_attack_pressed)
@@ -100,8 +104,9 @@ func _connect_buttons():
 		var idx = i  # capture for closure
 		loadout_slot_btns[i].pressed.connect(func(): _on_loadout_slot_pressed(idx))
 	for btn in [attack_btn, heavy_attack_btn, sword_attack_btn, 
-				sword_heavy_btn, defend_btn, item_btn, loadout_btn]:
+				sword_heavy_btn, defend_btn, item_btn, loadout_btn, execution_btn]:
 		_add_button_bounce(btn)	
+	execution_btn.pressed.connect(_on_execution_pressed)
 
 func _initialise_ui():
 	boss_name_label.text = "THE WARDEN"
@@ -190,7 +195,9 @@ func _on_charges_updated(attack_charges: int, _attack_max_charges: int, heavy_ch
 	await get_tree().process_frame
 	sword_attack_btn.pivot_offset = sword_attack_btn.size / 2.0
 	sword_heavy_btn.pivot_offset = sword_heavy_btn.size / 2.0
-
+	execution_btn.disabled = not turn_manager.can_use_execution_attack()
+	
+	
 func _get_charge_cost(combo: int) -> int:
 	if combo >= TurnManager.MAX_COMBO_COUNT:
 		return 4
@@ -288,6 +295,15 @@ func _on_loadout_panel_cancel_pressed():
 	loadout_panel.visible = false
 	_set_buttons_active(true)
 
+func _on_execution_pressed():
+	if _hero_animating:
+		return
+	_hero_animating = true
+	_set_buttons_active(false)
+	await _execute_execution_attack(active_hero, boss_sprite, _hero_start_position)
+	_hero_animating = false
+	turn_manager.player_act(TurnManager.PlayerAction.EXECUTION_ATTACK)
+
 func _refresh_loadout_panel():
 	var all_loadouts = [GameManager.active_loadout] + GameManager.backup_loadouts
 	for i in loadout_slot_btns.size():
@@ -320,6 +336,7 @@ func _set_buttons_active(active):
 	sword_attack_btn.disabled = (not active) or (not turn_manager.can_use_sword_attack_action())
 	sword_heavy_btn.disabled = (not active) or (not turn_manager.can_use_sword_heavy_action())
 	loadout_btn.disabled = not active
+	execution_btn.disabled = (not active) or (not turn_manager.can_use_execution_attack())
 
 func _apply_ui_style():
 	boss_hp_bar.self_modulate = Color(1.0, 0.92, 0.92)
@@ -341,6 +358,7 @@ func _apply_ui_style():
 	_apply_button_style(defend_btn, Color(0.15, 0.47, 0.88), Color(0.09, 0.31, 0.67))
 	_apply_button_style(item_btn, Color(0.94, 0.64, 0.16), Color(0.88, 0.42, 0.08))
 	_apply_button_style(loadout_btn, Color(0.52, 0.32, 0.88), Color(0.3, 0.2, 0.6))
+	_apply_button_style(execution_btn, Color(0.85, 0.55, 0.1), Color(0.65, 0.25, 0.05))
 	_apply_loadout_panel_style()
 
 
@@ -382,9 +400,13 @@ func _apply_button_style(button: Button, primary: Color, accent: Color):
 	button.add_theme_stylebox_override("disabled", _make_button_style(Color(0.25, 0.25, 0.25, 0.65), Color(0.12, 0.12, 0.12, 0.8), 999, 1))
 
 func _add_button_bounce(button: Button):
+	if not is_instance_valid(button):
+		return
 	button.pivot_offset = button.size / 2.0
 	button.pressed.connect(func():
-		button.pivot_offset = button.size / 2.0  # recalculate in case size changed
+		if not is_instance_valid(button):
+			return
+		button.pivot_offset = button.size / 2.0
 		var original_scale = button.scale
 		var tween = create_tween()
 		tween.tween_property(button, "scale", original_scale * 0.88, 0.07)\
@@ -544,7 +566,7 @@ func _execute_run_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, s
 	await _wait_for_frame(attacker, 2)
 	if attacker == active_hero:
 		var is_heavy = attack_animation.ends_with("heavy")
-		for effect_name in _get_effect_for_loadout(is_heavy):
+		for effect_name in _get_effect_for_loadout(is_heavy, true):
 			boss_effects.play_effect(effect_name)
 
 	await attacker.animation_finished
@@ -582,16 +604,28 @@ func _combat_target_position(attacker: AnimatedSprite2D, target: AnimatedSprite2
 		direction = 1
 	return Vector2(target.global_position.x - direction * 110.0, attacker.global_position.y)
 
-func _run_to_position(sprite: AnimatedSprite2D, destination: Vector2):
+func _run_to_position(sprite: AnimatedSprite2D, destination: Vector2, speed: float = RUN_SPEED, run_anim: String = "run"):
 	var distance = sprite.global_position.distance_to(destination)
 	if distance <= 1.0:
 		return
-
-	sprite.play("run")
-	var duration = distance / RUN_SPEED
+	sprite.play(run_anim)
+	var duration = distance / speed
 	var tween = create_tween()
 	tween.tween_property(sprite, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _execute_execution_attack(attacker: AnimatedSprite2D, target: AnimatedSprite2D, start_position: Vector2):
+	var target_position = _combat_target_position(attacker, target)
+	attacker.play("run2")
+	await _run_to_position(attacker, target_position, EXECUTION_RUN_SPEED, "run2")
+	attacker.play("execution_attack")
+	sfx_execution_attack.play()
+	await _wait_for_frame(attacker, 2)
+	boss_effects.play_effect("execution_attack")  # fire without await
+	await attacker.animation_finished
+	await get_tree().create_timer(0.5).timeout  # adjust to match effect duration
+	await _run_to_position(attacker, start_position, EXECUTION_RUN_SPEED, "run2")
+	attacker.play("idle")
 
 func _show_floating_damage(target_sprite: AnimatedSprite2D, amount: int, is_crit: bool):
 	var damage_label := Label.new()
@@ -635,7 +669,9 @@ func _show_floating_combo(target_sprite: AnimatedSprite2D, combo_type: String, c
 	await tween.finished
 	combo_label.queue_free()
 	
-func _get_effect_for_loadout(is_heavy: bool = false) -> Array:
+func _get_effect_for_loadout(is_heavy: bool = false, is_sword: bool = false) -> Array:
+	if not is_sword:
+		return ["impactdown"] if is_heavy else ["impact"]
 	match GameManager.active_loadout.weapon_type:
 		LoadoutData.WeaponType.EXCALIBUR: return ["sunburst"]
 		LoadoutData.WeaponType.DURANDAL: return ["lightning"]

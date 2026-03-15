@@ -22,6 +22,9 @@ var backup_loadouts: Array = []
 var echo_threshold_met: bool = false
 var echo_snapshot: Dictionary = {}
 
+# ─── EXECUTION SYSTEM ─────────────────────────────────────
+var total_charges_spent: int = 0
+
 # ─── READY ────────────────────────────────────────────────
 func _ready():
 	if active_loadout == null:
@@ -109,3 +112,4 @@ func swap_to_loadout(index: int) -> bool:
 func reset_for_new_stage() -> void:
 	_initialise_loadouts()
 	player_hp = active_loadout.max_hp
+	total_charges_spent = 0

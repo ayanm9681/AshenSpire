@@ -26,8 +26,9 @@ signal rebirth_animation_finished()
 enum PlayerAction {
 	ATTACK,
 	HEAVY_ATTACK,
-	SWORD_ATTACK,   # ← new
-	SWORD_HEAVY,    # ← new
+	SWORD_ATTACK,
+	SWORD_HEAVY,
+	EXECUTION_ATTACK,  
 	DEFEND,
 	USE_ITEM
 }
@@ -132,6 +133,8 @@ func player_act(action: PlayerAction) -> void:
 			_player_defend()
 		PlayerAction.USE_ITEM:
 			_player_use_item()
+		PlayerAction.EXECUTION_ATTACK:
+			_player_execution_attack()
 
 	_check_end()
 	if turn_state == TurnState.ENDED:
@@ -276,7 +279,8 @@ func _player_sword_attack() -> void:
 
 	for i in charge_cost:
 		GameManager.active_loadout.use_sword_attack_charge()
-
+	GameManager.total_charges_spent += charge_cost
+	
 	# Degrade and recalculate
 	GameManager.active_loadout.degrade_weapon(2)
 	sword_player_damage = GameManager.active_loadout.effective_damage()
@@ -345,6 +349,7 @@ func _player_sword_heavy_attack() -> void:
 
 	for i in charge_cost:
 		GameManager.active_loadout.use_sword_heavy_charge()
+	GameManager.total_charges_spent += charge_cost
 
 	# Degrade and recalculate
 	GameManager.active_loadout.degrade_weapon(5)
@@ -390,6 +395,31 @@ func _player_sword_heavy_attack() -> void:
 	emit_signal("charges_updated", GameManager.active_loadout.sword_attack_charges, GameManager.active_loadout.sword_attack_max_charges, GameManager.active_loadout.sword_heavy_charges, GameManager.active_loadout.sword_heavy_max_charges)
 	_check_echo_threshold()
 
+func _player_execution_attack() -> void:
+	if not can_use_execution_attack():
+		emit_signal("combat_log_updated", "Execution not ready. Spend 12 charges total first.")
+		threshold_turns += 1
+		return
+
+	sword_player_damage = GameManager.active_loadout.effective_damage()
+	var base: int = sword_player_damage - boss_defense
+	var damage: int = base if base > 0 else 1
+	damage += 2
+
+	# 100% crit, 300% on top of base multiplier
+	var crit_multiplier: float = HERO_BASE_CRIT_MULTIPLIER + 7.0
+	damage = int(round(float(damage) * crit_multiplier))
+
+	boss_hp -= damage
+	boss_hp = max(0, boss_hp)
+	threshold_damage_dealt += damage
+	threshold_turns += 1
+
+	emit_signal("combat_log_updated", "EXECUTION! Dealt %d damage!" % damage)
+	emit_signal("damage_taken", "boss", damage, true)
+	emit_signal("hp_changed", "boss", boss_hp)
+	_check_echo_threshold()
+
 func can_use_sword_attack_action() -> bool:
 	return GameManager.active_loadout.default_combo_count >= 1 \
 		and GameManager.active_loadout.has_sword_attack_charges()
@@ -402,6 +432,9 @@ func _player_defend() -> void:
 	player_is_defending = true
 	threshold_turns += 1
 	emit_signal("combat_log_updated", "You brace for impact.")
+
+func can_use_execution_attack() -> bool:
+	return GameManager.total_charges_spent >= 4
 
 func _player_use_item() -> void:
 	var heal: int = 25
